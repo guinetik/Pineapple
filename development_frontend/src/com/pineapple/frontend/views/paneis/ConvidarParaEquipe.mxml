@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 close="onClose(event)"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 initialize="onInit(event)"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 width="850"
+						 height="575"
+						 xmlns:controllers="com.pineapple.business.controllers.*"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.AssetManager;
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.EquipeVO;
+			import com.pineapple.business.model.UserVO;
+			import com.pineapple.business.repository.LoginRepository;
+
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.IUIComponent;
+			import mx.events.CloseEvent;
+			import mx.events.DragEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.DragManager;
+			import mx.managers.PopUpManager;
+
+			import spark.events.IndexChangeEvent;
+
+
+			[Bindable]
+			private var alunos:ArrayCollection;
+			[Bindable]
+			private var equipe:ArrayCollection;
+			[Bindable]
+			private var minhasEquipes:ArrayCollection;
+
+			public var selectedEquipe:String="";
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				this.alunos=event.data;
+
+				var idsParaRemover:Array=[];
+
+				for (var i:int=0; i < this.equipe.length; i++)
+				{
+
+					var e:UserVO=this.equipe.getItemAt(i) as UserVO;
+
+					for (var j:int=0; j < this.alunos.length; j++)
+					{
+
+						var u:UserVO=this.alunos.getItemAt(j) as UserVO;
+						u.isConvidado=true;
+
+						if (u.id == e.id)
+							idsParaRemover.push(e.id);
+
+					}
+
+
+				}
+
+				for (var k:int=0; k < idsParaRemover.length; k++)
+				{
+
+					for (var i2:int=0; i2 < alunos.length; i2++)
+					{
+
+						if (UserVO(alunos[i2]).id == idsParaRemover[k])
+						{
+
+							alunos.removeItemAt(i2);
+
+						}
+
+					}
+
+
+				}
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+				controllerMinhasEquipes.getEquipesWhereUserIsLeader(LoginRepository.getInstance().loggedUser);
+
+			}
+
+			protected function convidarUsuarios(event:MouseEvent):void
+			{
+
+				var invitedUsers:Array=[];
+				var user:UserVO;
+
+				for (var i:int=0; i < this.equipe.length; i++)
+				{
+
+					user=this.equipe.getItemAt(i) as UserVO;
+					if (user.isConvidado)
+						invitedUsers.push(user);
+
+				}
+
+				for (var j:int=0; j < invitedUsers.length; j++)
+				{
+
+					convidarUsuario(invitedUsers[j]);
+
+				}
+
+
+			}
+
+			private var numUsersInvited:uint=0;
+
+			private function convidarUsuario(u:UserVO):void
+			{
+
+				trace("ConvidarParaEquipe.convidarUsuario(", u.nome, ")");
+				numUsersInvited++;
+
+				var l:UserVO=LoginRepository.getInstance().loggedUser;
+				var e:EquipeVO=this.comboEquipe.selectedItem as EquipeVO;
+
+				CursorManager.setBusyCursor();
+
+				var controllerOperation:ControladorEquipe=new ControladorEquipe();
+				controllerOperation.addEventListener(DataReturnEvent.DATA_RETURN, onOperationReturn);
+				controllerOperation.convidarParaEquipe(e, u, l);
+
+			}
+
+			protected function onReturnMinhasEquipes(event:DataReturnEvent):void
+			{
+
+				this.minhasEquipes=event.data;
+				comboEquipe.selectedIndex=0;
+				CursorManager.removeBusyCursor();
+
+				getSelectedEquipe();
+
+			}
+
+			protected function onReturnMembros(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				var retorno:ArrayCollection=event.data;
+
+				for (var i:int=0; i < retorno.length; i++)
+				{
+
+					var user:UserVO=retorno.getItemAt(i) as UserVO;
+					user.extras.disable=true;
+
+				}
+
+				this.equipe=retorno;
+
+				CursorManager.setBusyCursor();
+				controllerConvidados.getAlunosConvidados(this.comboEquipe.selectedItem);
+
+			}
+
+			protected function onEquipeChange(event:IndexChangeEvent):void
+			{
+
+				getIntegrantes();
+
+			}
+
+			protected function filtrarDadosAlunos(event:MouseEvent):void
+			{
+
+				alunos.filterFunction=filterFirst;
+				this.alunos.refresh();
+				this.btLimparFiltrosAlunos.includeInLayout=true;
+				this.btLimparFiltrosAlunos.visible=true;
+
+			}
+
+			private function filterFirst(item:Object):Boolean
+			{
+
+				var p:UserVO=item as UserVO;
+				if (p.nome.match(new RegExp(txtFiltrosAlunos.text, 'i')))
+					return true;
+				else
+					return false;
+
+			}
+
+			protected function limparFiltrosAlunos(event:MouseEvent):void
+			{
+
+				this.btLimparFiltrosAlunos.includeInLayout=false;
+				this.btLimparFiltrosAlunos.visible=false;
+				this.alunos.filterFunction=null;
+				this.alunos.refresh();
+
+			}
+
+			private function getSelectedEquipe():void
+			{
+
+				if (selectedEquipe != "")
+				{
+
+					for (var i:int=0; i < this.minhasEquipes.length; i++)
+					{
+
+						var e:EquipeVO=minhasEquipes.getItemAt(i) as EquipeVO;
+						if (e.nome == selectedEquipe)
+							comboEquipe.selectedIndex=i;
+
+					}
+
+
+				}
+
+				getIntegrantes();
+
+			}
+
+			private function getIntegrantes():void
+			{
+
+				var e:EquipeVO=comboEquipe.selectedItem as EquipeVO;
+				controllerMembros.getMembrosDaEquipe(e);
+				CursorManager.setBusyCursor();
+
+			}
+
+			protected function onOperationReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+
+				if (event.result)
+				{
+
+					numUsersInvited--;
+
+					if (numUsersInvited == 0)
+					{
+
+						Alert.show("Operação realizada com sucesso", "Sucesso");
+
+					}
+
+				}
+				else
+				{
+
+					Alert.show("Houve um erro ao processar a operação", "Erro");
+
+				}
+
+			}
+
+			protected function onReturnConvidados(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+
+				var convidados:ArrayCollection=event.data;
+				for (var i:int=0; i < convidados.length; i++)
+				{
+
+					var u:UserVO=convidados.getItemAt(i) as UserVO;
+					u.nome+=" - Aguardando Aprovação";
+					u.extras.disable=true;
+					this.equipe.addItem(u);
+
+				}
+
+
+				CursorManager.setBusyCursor();
+				controllerAlunos.getAlunos();
+
+			}
+
+			private function dragEnterHandler(e:DragEvent):void
+			{
+
+				DragManager.acceptDragDrop(e.currentTarget as IUIComponent);
+
+			}
+
+			private function dragDropHandler(event:DragEvent):void
+			{
+
+				this.equipe.removeItemAt(listaEquipe.selectedIndex);
+
+			}
+
+			protected function onMouseUp(event:MouseEvent):void
+			{
+
+				btRemove.visible=btRemove.includeInLayout=false;
+				stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+
+			}
+
+			protected function onListaEquipeDragStart(event:DragEvent):void
+			{
+
+				if (!btRemove.visible)
+				{
+
+					btRemove.visible=btRemove.includeInLayout=true;
+					stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+
+				}
+
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorEquipe id="controllerAlunos"
+									   data_return="onDataReturn(event)"/>
+
+		<controllers:ControladorEquipe id="controllerMinhasEquipes"
+									   data_return="onReturnMinhasEquipes(event)"/>
+
+		<controllers:ControladorEquipe id="controllerMembros"
+									   data_return="onReturnMembros(event)"/>
+
+		<controllers:ControladorEquipe id="controllerConvidados"
+									   data_return="onReturnConvidados(event)"/>
+
+	</fx:Declarations>
+
+	<ui:layout>
+		<s:VerticalLayout paddingBottom="10"
+						  paddingLeft="10"
+						  paddingRight="10"
+						  paddingTop="10"/>
+	</ui:layout>
+
+	<s:DropDownList width="100%"
+					id="comboEquipe"
+					change="onEquipeChange(event)"
+					labelField="nome"
+					prompt="Selecione a Equipe"
+					height="30"
+					dataProvider="{minhasEquipes}"/>
+
+	<s:HGroup width="100%"
+			  height="100%">
+		<s:Panel width="50%"
+				 height="100%"
+				 
+				 title="Todos os alunos">
+
+			<s:controlBarContent>
+
+				<s:HGroup verticalAlign="middle"
+						  width="100%">
+					<s:Label text="Filtrar: "
+							 paddingTop="1"/>
+					<s:TextInput width="100%"
+								 id="txtFiltrosAlunos"/>
+					<s:Button icon="{AssetManager.Search}"
+							  height="30"
+							  click="filtrarDadosAlunos(event)"/>
+					<s:Button label="Limpar Filtros"
+							  height="30"
+							  id="btLimparFiltrosAlunos"
+							  includeInLayout="false"
+							  visible="false"
+							  click="limparFiltrosAlunos(event)"/>
+				</s:HGroup>
+
+			</s:controlBarContent>
+
+			<s:List width="100%"
+					height="100%"
+					id="listaAlunos"
+					dataProvider="{alunos}"
+					labelField="nome"
+					dragEnabled="true"
+					allowMultipleSelection="true"
+					itemRenderer="com.pineapple.frontend.views.renderers.AlunoItemRenderer"
+					borderVisible="false"/>
+		</s:Panel>
+
+		<s:Panel width="50%"
+				 height="100%"
+				 
+				 skinClass="spark.skins.spark.PanelSkin"
+				 title="{comboEquipe.selectedItem.nome}">
+
+			<s:List width="100%"
+					height="100%"
+					id="listaEquipe"
+					borderVisible="false"
+					dataProvider="{equipe}"
+					labelField="nome"
+					dragEnabled="true"
+					dragStart="onListaEquipeDragStart(event)"
+					itemRenderer="com.pineapple.frontend.views.renderers.AlunoItemRenderer"
+					dragMoveEnabled="true"
+					dropEnabled="true"/>
+
+			<s:controlBarContent>
+				<s:Button width="100%"
+						  height="30"
+						  label="Convidar Usuários"
+						  click="convidarUsuarios(event)"/>
+
+				<s:Button icon="{AssetManager.BinClosed}"
+						  width="20"
+						  height="30"
+						  id="btRemove"
+						  dragEnter="dragEnterHandler(event)"
+						  dragDrop="dragDropHandler(event)"
+						  visible="false"
+						  includeInLayout="false"/>
+
+			</s:controlBarContent>
+
+		</s:Panel>
+	</s:HGroup>
+
+</ui:ResizableTitleWindow>

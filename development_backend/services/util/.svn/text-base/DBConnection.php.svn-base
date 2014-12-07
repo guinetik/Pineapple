@@ -1,0 +1,60 @@
+<?php
+
+class DBConnection
+{
+	
+	var $con;
+	
+	var $host = "localhost";
+	var $usuario = "pineapple";
+	var $senha = "masterkey";
+	var $banco = "pineapple_bd";
+	
+	function DBConnection()
+	{
+		
+		$this->con= mysql_connect($this->host, $this->usuario, $this->senha);
+		mysql_select_db($this->banco, $this->con);
+	 
+	}
+	
+	function consulta($q)
+	{
+		
+		$rs = mysql_query($q);
+		return $this->order($rs);
+		
+	}
+	
+	function genericQuery($q)
+	{
+		
+		return mysql_query($q);
+		
+	}
+	
+	function isNaN( $var ) 
+	{
+		
+		return !preg_match ("/^[-]?[0-9]+([\.][0-9]+)?$/", $var);
+		
+	}
+
+	function order($query){
+		$dados = array();
+		$i = 0;
+		while($l = mysql_fetch_array($query)){
+			$dados[$i] = array();
+			foreach($l as $campo => $valor){
+				if($this->isNaN($campo)){
+					$dados[$i][strtolower($campo)] = $valor;
+				}
+			}
+		$i++;
+		}
+	return $dados;
+   }
+	
+}
+
+?>

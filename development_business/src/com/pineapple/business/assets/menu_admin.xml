@@ -1,0 +1,10 @@
+<menu>
+	
+	<menuitem label="Home" icon="ICON_HOME"/>
+	
+	<menuitem label="Ferramentas" icon="ICON_TOOLS">
+		<menuitem label="Acessar phpMyAdmin" data="ABRIR_PHPMYADMIN" icon="ICON_PHPMYADMIN"/>
+		<menuitem label="Acessar Service Browser" data="ABRIR_SERVICE_BROWSER" icon="ICON_BROWSER"/>
+	</menuitem>
+	
+</menu>

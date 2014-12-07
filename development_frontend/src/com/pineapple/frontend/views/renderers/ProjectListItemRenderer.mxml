@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sparkTree:TreeItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+							initialize="onInit(event)"
+							width="100%"
+							height="40"
+							dataChange="onDataChange(event)"
+							autoDrawBackground="true"
+							xmlns:s="library://ns.adobe.com/flex/spark"
+							xmlns:sparkTree="com.sparkTree.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.AssetManager;
+			import com.pineapple.business.model.AtividadeStatus;
+			import com.pineapple.business.model.AtividadeVO;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.model.SprintVO;
+
+			import mx.events.FlexEvent;
+
+			[Bindable]
+			private var bgColor:uint;
+			[Bindable]
+			private var icon_status:BitmapData;
+			[Bindable]
+			private var title:String;
+
+			protected function onInit(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+
+			}
+
+			protected function onDataChange(event:FlexEvent):void
+			{
+
+				var CircleBlue:Class=AssetManager.CircleBlue;
+				var CircleYellow:Class=AssetManager.CircleYellow;
+				var CircleGreen:Class=AssetManager.CircleGreen;
+
+				if (this.data is ProjetoVO)
+				{
+
+//					trace("ListaProjetoItemRenderer.onDataChange(projetoVO", this.data.nome, this.data.status ,")");
+
+					this.bgColor=0xBADA5F;
+					this.iconStatus.includeInLayout=false;
+					this.iconStatus.visible=false;
+					this.labelDisplay.setStyle("fontWeight", "bold");
+
+					this.title=data.nome;
+//					this.bg.alpha = 0.8;
+
+				}
+				else if (this.data is SprintVO)
+				{
+
+//					trace("ListaProjetoItemRenderer.onDataChange(sprintVO", this.data.nome, this.data.status ,")");
+
+					if (SprintVO(data).status == AtividadeStatus.INCIADO)
+					{
+						this.icon_status=new CircleBlue().bitmapData;
+					}
+					else if (SprintVO(data).status == AtividadeStatus.ANDAMENTO)
+					{
+						this.icon_status=new CircleYellow().bitmapData;
+					}
+					else if (SprintVO(data).status == AtividadeStatus.FINALIZADO)
+					{
+						this.icon_status=new CircleGreen().bitmapData;
+					}
+
+					this.bgColor=0xDCFA9B;
+//					this.bg.alpha = 0.8;
+					this.title=data.nome;
+
+				}
+				else if (this.data is AtividadeVO)
+				{
+
+//					trace("ListaProjetoItemRenderer.onDataChange(AtividadeVO", this.data.nome, this.data.status ,")");
+
+					if (AtividadeVO(data).status == AtividadeStatus.INCIADO)
+					{
+
+						this.icon_status=new CircleBlue().bitmapData;
+
+					}
+					else if (AtividadeVO(data).status == AtividadeStatus.ANDAMENTO)
+					{
+
+						this.icon_status=new CircleYellow().bitmapData;
+
+					}
+					else if (AtividadeVO(data).status == AtividadeStatus.FINALIZADO)
+					{
+
+						this.icon_status=new CircleGreen().bitmapData;
+
+					}
+
+					this.bgColor=0xDCFA9B;
+//					this.bg.alpha = 0.65;
+					this.title=data.nome;
+
+				}
+				else
+				{
+
+//					trace("ListaProjetoItemRenderer.onDataChange(generic", this.data.nome, this.data.status ,")");
+
+					this.iconStatus.includeInLayout=false;
+					this.iconStatus.visible=false;
+					this.bgColor=0xC7E18C;
+
+					if (data != null)
+					{
+
+						if (data.hasOwnProperty("nome"))
+						{
+
+							this.title=data.nome;
+							trace("generic", data.nome);
+
+						}
+
+					}
+
+				}
+
+			}
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+
+	</fx:Declarations>
+
+	<sparkTree:layout>
+		<s:HorizontalLayout paddingLeft="{indentation + 4}"
+							verticalAlign="middle"/>
+	</sparkTree:layout>
+
+	<sparkTree:DefaultDisclosureButton visible="{disclosureIconVisible}"
+									   click="{toggle();}"
+									   currentState="{isOpen ? 'open' : 'closed'}"/>
+
+	<s:BitmapImage source="{icon}"
+				   visible="{Boolean(icon)}"
+				   includeInLayout="{Boolean(icon)}"/>
+
+	<s:HGroup width="100%"
+			  verticalAlign="middle"
+			  paddingRight="5">
+		<s:Label id="labelDisplay"
+				 text="{label}"
+				 width="100%"
+				 color="{textColor}"/>
+		<s:Image id="iconStatus"
+				 source="{icon_status}"
+				 width="20"
+				 height="20"
+				 smooth="true"/>
+	</s:HGroup>
+
+</sparkTree:TreeItemRenderer>

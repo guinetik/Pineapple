@@ -1,0 +1,23 @@
+<menu>
+	<menuitem label="Home" icon="ICON_HOME"/>
+	<menuitem label="Ideias" icon="ICON_IDEAS">
+		<menuitem label="Minhas Ideias" icon="ICON_VISUALIZAR_IDEA" data="MINHAS_IDEIAS"/>
+		<menuitem label="Cadastrar Ideia" data="CADASTRAR_IDEIA" icon="ICON_CADASTRAR_IDEIA"/>
+		<menuitem label="Visualizar Ideias" icon="ICON_VISUALIZAR_IDEA" data="VISUALIZAR_IDEIAS"/>
+	</menuitem>
+	
+	<menuitem label="Projetos" icon="ICON_PROJETOS">
+		<menuitem label="Meus Projetos" icon="ICON_MEUS_PROJETOS" data="MEUS_PROJETOS"/>
+	</menuitem>
+	
+	<menuitem label="Equipes" icon="ICON_EQUIPES">
+		<menuitem label="Buscar Equipes" icon="ICON_BUSCAR_EQUIPES" data="BUSCAR_EQUIPE"/>
+		<menuitem label="Criar Equipe" icon="ICON_CRIAR_EQUIPES" data="CRIAR_EQUIPE"/>
+		<menuitem label="Minhas Equipes" icon="ICON_MINHAS_EQUIPES" data="MINHAS_EQUIPES"/>
+	</menuitem>
+	
+	<menuitem label="Cadastro" icon="ICON_CADASTRO">
+			<menuitem label="Editar Cadastro" icon="ICON_EDITAR_CADASTRO" data="EDITAR_CADASTRO"/>
+	</menuitem>
+	
+</menu>

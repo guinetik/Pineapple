@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 title="Solicitar Orientação"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 initialize="onInit(event)"
+						 close="onClose(event)"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 width="550"
+						 height="200"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*"
+						 xmlns:controllers="com.pineapple.business.controllers.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.EquipeVO;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.model.UserVO;
+			import com.pineapple.business.repository.LoginRepository;
+			
+			import flashx.textLayout.conversion.ConversionType;
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+
+			[Bindable]
+			private var minhasIdeias:ArrayCollection;
+			[Bindable]
+			private var minhasEquipes:ArrayCollection;
+			[Bindable]
+			private var professores:ArrayCollection;
+			[Bindable]
+			public var idIdeia:int=-1;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+				controllerProjetos.getIdeias();
+				CursorManager.setBusyCursor();
+				controllerLogin.getProfessores();
+				CursorManager.setBusyCursor();
+				controllerEquipe.getEquipesWhereUserIsLeader(LoginRepository.getInstance().loggedUser);
+
+			}
+
+			protected function onProjetosReturn(event:DataReturnEvent):void
+			{
+
+				minhasIdeias=event.data;
+				this.comboIdeias.selectedIndex=0;
+				CursorManager.removeBusyCursor();
+
+				if (idIdeia != -1)
+				{
+
+					selectProjeto();
+
+				}
+
+			}
+
+			protected function onProfessoresDataReturn(event:DataReturnEvent):void
+			{
+
+				this.professores=event.data;
+				this.comboProfessor.selectedIndex=0;
+				CursorManager.removeBusyCursor();
+
+			}
+
+			protected function enviarSolicitacao(event:MouseEvent):void
+			{
+				
+				CursorManager.setBusyCursor();
+				controllerOrientacoes.doesIdeiaHasOrientationRequest(this.idIdeia, comboEquipe.selectedItem.id, comboProfessor.selectedItem.id);
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			private function selectProjeto():void
+			{
+
+				for (var i:int=0; i < minhasIdeias.length; i++)
+				{
+
+					var p:ProjetoVO=minhasIdeias.getItemAt(i) as ProjetoVO;
+					if (p.id == idIdeia)
+						comboIdeias.selectedIndex=i;
+
+				}
+
+
+			}
+
+			protected function onEquipesDataReturn(event:DataReturnEvent):void
+			{
+
+				this.minhasEquipes=event.data;
+				this.comboEquipe.selectedIndex=0;
+				CursorManager.removeBusyCursor();
+
+			}
+
+			protected function onOperationReturn(event:DataReturnEvent):void
+			{
+
+				trace(event.result);
+
+				CursorManager.removeBusyCursor();
+
+				if (event.result == true)
+				{
+
+					Alert.show("Operação Realizada com Sucesso", "Sucesso");
+					PopUpManager.removePopUp(this);
+
+				}
+				else
+				{
+
+					Alert.show("Erro ao processar a operação", "Erro");
+
+				}
+
+			}
+
+			protected function onOrientationReturn(event:DataReturnEvent):void
+			{
+				
+				if(event.result == true)
+				{
+					
+					Alert.show("Você já convidou esse professor para orientar esse projeto. Aguarde a resposta da orientação", "Atenção");
+					
+				} else
+				{
+					
+					controllerOperation.solicitarOrientacao(comboIdeias.selectedItem, comboEquipe.selectedItem, comboProfessor.selectedItem);
+					CursorManager.setBusyCursor();
+					
+				}
+				
+				CursorManager.removeBusyCursor();
+
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorProjetos id="controllerProjetos"
+										 data_return="onProjetosReturn(event)"/>
+		<controllers:ControladorLogin id="controllerLogin"
+									  data_return="onProfessoresDataReturn(event)"/>
+		<controllers:ControladorEquipe id="controllerEquipe"
+									   data_return="onEquipesDataReturn(event)"/>
+
+		<controllers:ControladorProjetos id="controllerOrientacoes"
+										 data_return="onOrientationReturn(event)"/>
+
+		<controllers:ControladorProjetos id="controllerOperation"
+										 data_return="onOperationReturn(event)"/>
+
+	</fx:Declarations>
+
+	<ui:layout>
+		<s:VerticalLayout gap="10"
+						  paddingBottom="5"
+						  paddingLeft="5"
+						  paddingRight="5"
+						  paddingTop="10"/>
+	</ui:layout>
+
+	<s:DropDownList width="100%"
+					height="30"
+					id="comboIdeias"
+					labelField="nome"
+					prompt="Ideia:"
+					dataProvider="{minhasIdeias}"/>
+
+	<s:DropDownList width="100%"
+					height="30"
+					id="comboEquipe"
+					labelField="nome"
+					prompt="Equipe"
+					dataProvider="{minhasEquipes}"/>
+
+	<s:DropDownList width="100%"
+					height="30"
+					id="comboProfessor"
+					prompt="Professor:"
+					dataProvider="{professores}"
+					labelField="nome"/>
+
+	<s:Button width="100%"
+			  height="30"
+			  label="Enviar"
+			  click="enviarSolicitacao(event)"/>
+
+</ui:ResizableTitleWindow>

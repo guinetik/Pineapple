@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 title="Cadastrar Atividade"
+						 close="onClose(event)"
+						 initialize="onInit(event)"
+						 width="600"
+						 height="450"
+						 xmlns:controllers="com.pineapple.business.controllers.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.AtividadeStatus;
+			import com.pineapple.business.model.AtividadeVO;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.model.SprintVO;
+			import com.pineapple.business.model.UserType;
+			import com.pineapple.business.repository.LoginRepository;
+			
+			import flashx.textLayout.conversion.ConversionType;
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+
+			[Bindable]
+			public var projetos:ArrayCollection;
+			[Bindable]
+			public var sprints:ArrayCollection;
+			[Bindable]
+			public var idProjeto:int=-1;
+			[Bindable]
+			public var idSprint:int=-1;
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+				if(LoginRepository.getInstance().loggedUser.entidade == UserType.USER_ALUNO)
+				{
+					
+					controller.getProjetos();
+					
+				} else 
+				{
+					
+					controller.getProjetosByProfessor(LoginRepository.getInstance().loggedUser.login);
+					
+				}
+
+
+			}
+
+			protected function cadastrarAtividade(event:MouseEvent):void
+			{
+
+				var atividade:AtividadeVO=new AtividadeVO();
+				atividade.nome=txtTitulo.text;
+				atividade.descricao=TextConverter.export(editor.textFlow, TextConverter.TEXT_FIELD_HTML_FORMAT, ConversionType.STRING_TYPE).toString();
+				atividade.status=AtividadeStatus.INCIADO;
+				atividade.idsprint=SprintVO(comboSprint.selectedItem).id;
+
+				CursorManager.setBusyCursor();
+
+				controllerAtividades.createAtividade(atividade);
+
+			}
+
+			protected function onAtividadeDataReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+
+				if (event.result == true)
+				{
+
+					Alert.show("Atividade Adicionada", "Sucesso");
+					txtTitulo.text = "";
+					editor.text = "";
+
+				}
+				else
+				{
+
+					Alert.show("Erro ao adicionar a Atividade", "Erro!");
+
+				}
+
+			}
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				projetos=event.data;
+
+				if (this.idProjeto > 0)
+				{
+
+					getSelectedProject();
+
+				}
+				else
+				{
+
+					comboProjeto.selectedIndex=0;
+
+					CursorManager.setBusyCursor();
+					controllerSprints.getSprintsByProjeto(comboProjeto.selectedItem);
+
+				}
+
+			}
+
+			protected function onProjetosChange(event:IndexChangeEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+				controllerSprints.getSprintsByProjeto(comboProjeto.selectedItem);
+
+			}
+
+			protected function onDataReturnSprints(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				sprints=event.data;
+
+				if (idSprint > 0)
+				{
+
+					getSelectedSprint();
+
+				}
+				else
+				{
+
+					comboSprint.selectedIndex=0;
+
+				}
+
+
+			}
+
+			private function getSelectedProject():void
+			{
+
+				for (var i:int=0; i < projetos.length; i++)
+				{
+
+					var p:ProjetoVO=projetos.getItemAt(i) as ProjetoVO;
+					if (p.id == idProjeto)
+						comboProjeto.selectedIndex=i;
+
+				}
+
+				CursorManager.setBusyCursor();
+				controllerSprints.getSprintsByProjeto(comboProjeto.selectedItem);
+
+
+			}
+
+			private function getSelectedSprint():void
+			{
+
+				for (var i:int=0; i < sprints.length; i++)
+				{
+
+					var p:SprintVO=sprints.getItemAt(i) as SprintVO;
+					if (p.id == idSprint)
+						comboSprint.selectedIndex=i;
+
+				}
+
+				idSprint=-1;
+
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorProjetos id="controller"
+										 data_return="onDataReturn(event)"/>
+		<controllers:ControladorProjetos id="controllerSprints"
+										 data_return="onDataReturnSprints(event)"/>
+		<controllers:ControladorAtividades id="controllerAtividades"
+										   data_return="onAtividadeDataReturn(event)"/>
+	</fx:Declarations>
+
+	<ui:layout>
+		<s:VerticalLayout paddingBottom="10"
+						  paddingLeft="10"
+						  paddingRight="10"
+						  paddingTop="10"/>
+	</ui:layout>
+
+	<s:DropDownList width="100%"
+					labelField="nome"
+					id="comboProjeto"
+					prompt="Selecione o Projeto"
+					dataProvider="{projetos}"
+					change="onProjetosChange(event)"
+					height="30"/>
+	<s:DropDownList width="100%"
+					labelField="nome"
+					prompt="Selecione a Sprint"
+					id="comboSprint"
+					dataProvider="{sprints}"
+					height="30"/>
+
+	<s:Label text="Titulo"
+			 paddingTop="5"/>
+	<s:TextInput width="100%"
+				 id="txtTitulo"/>
+	<s:Panel width="100%"
+			 
+			 height="100%" title="Descrição">
+		<s:controlBarContent>
+			<ui:RichTextControlBar id="richTextEditor"
+								   editor="{editor}"/>
+		</s:controlBarContent>
+
+		<s:TextArea id="editor"
+					focusEnabled="false"
+					width="100%"
+					height="100%"
+					selectionChange="richTextEditor.editor_selectionChangeHandler(event);"/>
+
+	</s:Panel>
+	<s:Button width="100%"
+			  height="30"
+			  label="Enviar"
+			  click="cadastrarAtividade(event)"/>
+
+</ui:ResizableTitleWindow>

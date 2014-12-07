@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 initialize="onInit(event)"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="100%"
+		 height="115">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.AssetManager;
+			import com.pineapple.business.controllers.ControladorLogin;
+			import com.pineapple.business.events.HeaderMenuEvent;
+			import com.pineapple.business.model.UserType;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.PineappleFrontend;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.XMLListCollection;
+			import mx.controls.menuClasses.MenuBarItem;
+			import mx.events.FlexEvent;
+			import mx.events.MenuEvent;
+			
+			[Bindable]
+			private var styleDataProvider:ArrayCollection = new ArrayCollection(
+				[{label:"default"},
+					{label:"azure", style:"lunaAzure"},
+					{label:"rose", style:"lunaRose"},
+					{label:"orange", style:"lunaOrange"},
+					{label:"green", style:"lunaGreen"}
+				]);
+
+			[Bindable]
+			private var menuProvider:XMLListCollection;
+
+			[Bindable]
+			public var ICON_HOME:Class=AssetManager.IconHome;
+			[Bindable]
+			public var ICON_IDEAS:Class=AssetManager.IconIdeas;
+			[Bindable]
+			public var ICON_CADASTRAR_IDEIA:Class=AssetManager.IconIdeaAdd;
+			[Bindable]
+			public var ICON_VISUALIZAR_IDEA:Class=AssetManager.IconIdeasView;
+			[Bindable]
+			public var ICON_PROJETOS:Class=AssetManager.Book;
+			[Bindable]
+			public var ICON_BUSCAR_PROJETOS:Class=AssetManager.BookSearch;
+			[Bindable]
+			public var ICON_MEUS_PROJETOS:Class=AssetManager.BookEdit;
+			[Bindable]
+			public var ICON_EQUIPES:Class=AssetManager.Group;
+			[Bindable]
+			public var ICON_BUSCAR_EQUIPES:Class=AssetManager.GroupSearch;
+			[Bindable]
+			public var ICON_CRIAR_EQUIPES:Class=AssetManager.GroupAdd;
+			[Bindable]
+			public var ICON_MINHAS_EQUIPES:Class=AssetManager.GroupConfig;
+			[Bindable]
+			public var ICON_CADASTRO:Class=AssetManager.VCard;
+			[Bindable]
+			public var ICON_EDITAR_CADASTRO:Class=AssetManager.VCardEdit;
+			
+			[Bindable]
+			public var ICON_TOOLS:Class=AssetManager.Config;
+			
+			[Bindable]
+			public var ICON_PHPMYADMIN:Class=AssetManager.PagePHP;
+			
+			[Bindable]
+			public var ICON_BROWSER:Class=AssetManager.DatabaseConfig;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				var MenuClass:Class;
+				var xml:XML;
+
+				switch (LoginRepository.getInstance().loggedUser.entidade)
+				{
+
+					case UserType.USER_ALUNO:
+					{
+
+						icon.source=AssetManager.User;
+						MenuClass=AssetManager.MenuAluno;
+						xml = MenuClass.data as XML;
+						menuProvider = new XMLListCollection(xml.menuitem);
+
+						break;
+
+					}
+
+					case UserType.USER_PROFESSOR:
+					{
+
+						icon.source=AssetManager.UserProfessor;
+						
+						MenuClass=AssetManager.MenuProfessor;
+						xml = MenuClass.data as XML;
+						menuProvider = new XMLListCollection(xml.menuitem);
+						
+						break;
+
+					}
+						
+					case UserType.USER_ADMINISTRADOR:
+					{
+						
+						icon.source=AssetManager.UserAdmin;
+						
+						MenuClass=AssetManager.MenuAdmin;
+						xml = MenuClass.data as XML;
+						menuProvider = new XMLListCollection(xml.menuitem);
+						
+						break;
+						
+					}
+
+				}
+
+			}
+
+			protected function sair(event:MouseEvent):void
+			{
+				
+				ExternalInterface.call("window.location.reload()");
+
+			}
+
+			private function resizeMenuItems():void
+			{
+
+//				trace("Header.resizeMenuItems()", mainMenu.menuBarItems.length);
+
+				for each (var item:MenuBarItem in mainMenu.menuBarItems)
+				{
+
+//					trace("Header.resizeMenuItems()");
+					item.width+=10;
+
+				}
+
+			}
+
+			protected function mainMenu_creationCompleteHandler(event:FlexEvent):void
+			{
+
+				trace("Header.mainMenu_creationCompleteHandler(event)");
+				resizeMenuItems();
+
+			}
+			
+			protected function onSelectMenu(event:MenuEvent):void
+			{
+				
+				var intentAction:String 					= String(event.item.@data);
+				
+				trace("Header.onSelectMenu(", event.item.@data, ")");
+				
+				var evento:HeaderMenuEvent 					= new HeaderMenuEvent(HeaderMenuEvent.MENU_SELECTED);
+				evento.intentAction 						= intentAction;
+				this.dispatchEvent(evento);
+				
+			}
+			
+			private function changeStyle():void
+			{
+				this.parentApplication.styleName 			= styleDropDownMenu.selectedItem.style;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Metadata>
+		[Event(name="menu_selected", type="com.pineapple.business.events.HeaderMenuEvent")]
+		[Event(name="refresh_ui", type="com.pineapple.frontend.views.ui.UIEvent")]
+	</fx:Metadata>
+	
+	<s:Image source="{AssetManager.LogoH}"
+			 smooth="true"
+			 width="185"
+			 height="75"/>
+	<mx:MenuBar id="mainMenu"
+				left="5"
+				right="5"
+				width="100%"
+				top="80"
+				height="30"
+				showRoot="false"
+				itemClick="onSelectMenu(event)"
+				creationComplete="mainMenu_creationCompleteHandler(event)"
+				dataProvider="{menuProvider}"
+				labelField="@label"
+				iconField="@icon"/>
+
+	<s:HGroup right="10"
+			  top="85"
+			  verticalAlign="middle"
+			  gap="10">
+		<s:Image id="icon"
+				 width="16"
+				 height="16"/>
+		<s:Label text="{'Seja bem vindo, ' + LoginRepository.getInstance().loggedUser.nome }"
+				 paddingTop="2"/>
+		<s:DropDownList id="styleDropDownMenu" fontSize="13" change="changeStyle();" dataProvider="{styleDataProvider}" prompt="Selecione um visual" width="160" />
+		<s:Button label="Sair"
+				  icon="{AssetManager.ButtonOff}"
+				  click="sair(event)"/>
+	</s:HGroup>
+
+</s:Group>

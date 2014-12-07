@@ -1,0 +1,625 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 title="Editar Cadastro"
+						 close="onClose(event)"
+						 creationComplete="onCreationComplete(event)"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 width="850"
+						 height="500"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*"
+						 xmlns:controllers="com.pineapple.business.controllers.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.AssetManager;
+			import com.pineapple.business.controllers.ControladorLogin;
+			import com.pineapple.business.controllers.PhotoUploadController;
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.EquipeVO;
+			import com.pineapple.business.model.ExpertiseVO;
+			import com.pineapple.business.model.UserVO;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			import com.pineapple.frontend.views.ui.ImageCropper;
+			
+			import flashx.textLayout.conversion.ConversionType;
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.IUIComponent;
+			import mx.events.CloseEvent;
+			import mx.events.DragEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.DragManager;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+
+			private var fileRef:FileReference;
+			private var uploadController:PhotoUploadController;
+
+			[Bindable]
+			private var expertisesUser:ArrayCollection;
+
+			[Bindable]
+			private var expertises:ArrayCollection;
+
+			protected function startUpload(event:MouseEvent):void
+			{
+
+
+				fileRef=new FileReference();
+
+				fileRef.addEventListener(Event.SELECT, onFileSelected);
+				fileRef.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+				fileRef.addEventListener(Event.COMPLETE, onComplete);
+				var typeFilter:FileFilter=new FileFilter("Images(*.jpg,*.jpeg,*.gif,*.png)", "*.jpg;*.jpeg;*.gif;*.png")
+				fileRef.browse([typeFilter]);
+
+			}
+
+			protected function startWebcam(event:MouseEvent):void
+			{
+				
+				var menuController:MenuController = new MenuController();
+				menuController.root = this.root;
+				var p:DisplayObjectContainer = menuController.openWebcamCapturer();
+				p.addEventListener(Event.COMPLETE, onCompleteWebcam);
+
+			}
+
+			protected function editarPerfil(event:MouseEvent):void
+			{
+
+				if (txtEditarFoto.visible)
+				{
+
+
+					uploadController.addEventListener(Event.COMPLETE, uploadCompleteHandler);
+					uploadController.uploadForMobile();
+					CursorManager.setBusyCursor();
+
+				}
+				else
+				{
+
+					validarForm();
+					CursorManager.setBusyCursor();
+
+				}
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			protected function onFileSelected(event:Event):void
+			{
+
+				trace("EditarCadastro.onFileSelected(event)");
+				fileRef.load();
+
+			}
+
+			protected function onIOError(event:IOErrorEvent):void
+			{
+
+				trace("EditarCadastro.onIOError(event)");
+
+			}
+
+			protected function onComplete(event:Event):void
+			{
+
+				var loader:Loader=new Loader();
+				loader.loadBytes(fileRef.data);
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loaderCompleteHandler);
+
+			}
+
+			protected function loaderCompleteHandler(event:Event):void
+			{
+
+				trace("EditarCadastro.onComplete(event)");
+
+				var loader:LoaderInfo=event.target as LoaderInfo;
+
+				p.addEventListener(Event.CHANGE, onCrop);
+				var p:ImageCropper=new ImageCropper();
+				p.styleName = PineappleFrontend.getInstance().styleName;
+				PopUpManager.addPopUp(p, this.root, true);
+				PopUpManager.centerPopUp(p);
+
+				p.ScaleStep=0.05;
+				p.setCropRectSize(200, 200);
+				p.ImageData=(loader.content as Bitmap).bitmapData;
+
+			}
+
+			protected function onCrop(event:Event):void
+			{
+
+				uploadController=new PhotoUploadController();
+				uploadController.addEventListener(Event.RESIZE, onCompleteThumbResize);
+				uploadController.prepareThumbnail(new Bitmap(ImageCropper(event.target).doCrop()));
+
+				PopUpManager.removePopUp(ImageCropper(event.target));
+
+			}
+
+			protected function onCompleteWebcam(event:Event):void
+			{
+
+				var a:WebcamCapturer=event.target as WebcamCapturer;
+
+				var p:ImageCropper=new ImageCropper();
+				p.addEventListener(Event.CHANGE, onCrop);
+				p.styleName = PineappleFrontend.getInstance().styleName;
+				PopUpManager.addPopUp(p, this.root, true);
+				PopUpManager.centerPopUp(p);
+
+				p.ScaleStep=0.05;
+				p.setCropRectSize(200, 200);
+				p.ImageData=(a.previewImage.source) as BitmapData;
+
+				PopUpManager.removePopUp(a);
+
+
+			}
+
+			private var scaledIcon:Bitmap;
+
+			protected function onCompleteThumbResize(event:Event):void
+			{
+
+				scaledIcon=uploadController.resultBitmap;
+				scaledIcon.smoothing=true;
+				avatar.source=scaledIcon;
+
+				txtEditarFoto.visible=true;
+
+			}
+
+			protected function uploadCompleteHandler(event:Event):void
+			{
+
+				validarForm();
+
+			}
+
+			private function validarForm():void
+			{
+
+
+				var user:UserVO=LoginRepository.getInstance().loggedUser;
+
+				if (txtSenhaAtual.text != "" && txtNovaSenha.text != "" && txtNovaSenhaConfirmar.text != "")
+				{
+
+					if (txtSenhaAtual.text == user.senha)
+					{
+						if (txtNovaSenha.text == txtNovaSenhaConfirmar.text)
+						{
+
+							enviarDados(true);
+
+						}
+						else
+						{
+
+							Alert.show("As senhas digitadas não são correspondentes. Tente novamente.", "Erro");
+							CursorManager.removeBusyCursor();
+
+						}
+
+					}
+					else
+					{
+
+						Alert.show("Digite sua senha atual corretamente", "Erro");
+						CursorManager.removeBusyCursor();
+
+					}
+
+				}
+				else
+				{
+
+					enviarDados(false);
+
+				}
+
+
+			}
+
+			protected function onEditComplete(event:DataReturnEvent):void
+			{
+
+				if (event.result == true)
+				{
+
+					Alert.show("Usuário Editado com sucesso", "Sucesso");
+
+				}
+				else
+				{
+
+					Alert.show("Erro ao editar o usuário.", "Erro");
+
+				}
+
+				CursorManager.removeBusyCursor();
+
+			}
+
+			private function enviarDados(passwordChange:Boolean=false):void
+			{
+
+				var user:UserVO=LoginRepository.getInstance().loggedUser;
+
+				var nomeUsuario:String=user.nome;
+				user.email=txtEmail.text;
+				if (passwordChange)
+					user.senha=txtNovaSenha.text;
+				user.mensagem=TextConverter.export(editor.textFlow, TextConverter.TEXT_FIELD_HTML_FORMAT, ConversionType.STRING_TYPE).toString();
+
+				if (uploadController != null)
+					user.imagem="http://projects.guinetik.com/public/pineapple_backend/uploads/" + uploadController.filename;
+
+				var controller:ControladorLogin=new ControladorLogin();
+				controller.addEventListener(DataReturnEvent.DATA_RETURN, onEditComplete);
+				controller.editarUsuario(user, nomeUsuario);
+
+			}
+
+			protected function onCreationComplete(event:FlexEvent):void
+			{
+
+				var user:UserVO=LoginRepository.getInstance().loggedUser;
+				editor.textFlow=TextConverter.importToFlow(user.mensagem, TextConverter.TEXT_FIELD_HTML_FORMAT);
+
+				CursorManager.setBusyCursor();
+				controllerUserExpertises.getExpertisesUsuario(user.login);
+
+			}
+
+			protected function onReturnUserExpertises(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				this.expertisesUser=event.data;
+
+
+				CursorManager.setBusyCursor();
+				controllerExpertise.getExpertises();
+
+
+			}
+
+			protected function adicionarExpertise(event:MouseEvent):void
+			{
+
+				var e:ExpertiseVO;
+
+				if (comboExpertises.selectedItem is ExpertiseVO)
+				{
+
+					e=comboExpertises.selectedItem as ExpertiseVO;
+					CursorManager.setBusyCursor();
+					controllerOperations.addExpertiseToUsuario(e, LoginRepository.getInstance().loggedUser.login);
+
+				}
+				else
+				{
+
+					if (colorCP.selectedColor == 0)
+					{
+
+						var arr:ArrayCollection=ControladorExpertises.cores;
+						var id:int=Math.round(Math.random() * arr.length);
+						colorCP.selectedColor=uint(arr.getItemAt(id));
+
+					}
+
+					e=new ExpertiseVO();
+					e.nome=comboExpertises.textInput.text.toUpperCase();
+					e.color="0x" + colorCP.selectedColor.toString(16);
+
+					CursorManager.setBusyCursor();
+					controllerOperations.saveAndAddExpertiseToUsuario(e, LoginRepository.getInstance().loggedUser.login);
+
+				}
+
+			}
+
+			protected function onDataReturnExpertises(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				this.expertises=event.data;
+
+				var idsParaRemover:Array=[];
+
+				for (var i:int=0; i < this.expertises.length; i++)
+				{
+
+					var e:ExpertiseVO=this.expertises.getItemAt(i) as ExpertiseVO;
+
+					for (var j:int=0; j < this.expertisesUser.length; j++)
+					{
+
+						var u:ExpertiseVO=this.expertisesUser.getItemAt(j) as ExpertiseVO;
+
+						if (u.id == e.id)
+							idsParaRemover.push(e.id);
+
+					}
+
+
+				}
+
+				for (var k:int=0; k < idsParaRemover.length; k++)
+				{
+
+					for (var i2:int=0; i2 < expertises.length; i2++)
+					{
+
+						if (ExpertiseVO(expertises[i2]).id == idsParaRemover[k])
+						{
+
+							expertises.removeItemAt(i2);
+
+						}
+
+					}
+
+
+				}
+
+				this.comboExpertises.selectedIndex=0;
+
+			}
+
+			protected function onExpertisesChange(event:IndexChangeEvent):void
+			{
+
+				if (comboExpertises.selectedItem is ExpertiseVO)
+				{
+
+					var e:ExpertiseVO=comboExpertises.selectedItem as ExpertiseVO;
+					var bgColor:uint=uint(e.color);
+					colorCP.selectedColor=bgColor;
+
+				}
+
+			}
+
+			protected function onOperationReturn(event:DataReturnEvent):void
+			{
+
+				if (event.result)
+				{
+
+					Alert.show("Operação realizada com sucesso", "Sucesso");
+					CursorManager.setBusyCursor();
+					controllerUserExpertises.getExpertisesUsuario(LoginRepository.getInstance().loggedUser.login);
+
+				}
+				else
+				{
+
+					Alert.show("Houve um erro ao processar a operação", "Erro");
+
+				}
+
+				CursorManager.removeBusyCursor();
+
+			}
+
+			protected function onDropToRemove(event:DragEvent):void
+			{
+
+
+
+			}
+
+			protected function onMouseDown(event:DragEvent):void
+			{
+
+				if (!btRemove.visible)
+				{
+
+					btRemove.visible=btRemove.includeInLayout=true;
+					stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+
+				}
+
+			}
+
+			private function dragEnterHandler(e:DragEvent):void
+			{
+
+				DragManager.acceptDragDrop(e.currentTarget as IUIComponent);
+
+			}
+
+			private function dragDropHandler(event:DragEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+				var e:ExpertiseVO=listExpertises.selectedItem as ExpertiseVO;
+				controllerOperations.removeExpertiseFromUsuario(e, LoginRepository.getInstance().loggedUser.login);
+
+			}
+
+			protected function onMouseUp(event:MouseEvent):void
+			{
+
+				btRemove.visible=btRemove.includeInLayout=false;
+				stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+
+		<controllers:ControladorExpertises id="controllerUserExpertises"
+										   data_return="onReturnUserExpertises(event)"/>
+
+		<controllers:ControladorExpertises id="controllerExpertise"
+										   data_return="onDataReturnExpertises(event)"/>
+
+		<controllers:ControladorExpertises id="controllerOperations"
+										   data_return="onOperationReturn(event)"/>
+
+	</fx:Declarations>
+
+	<ui:layout>
+		<s:HorizontalLayout gap="5"
+							paddingBottom="10"
+							paddingLeft="5"
+							paddingRight="5"
+							paddingTop="5"/>
+	</ui:layout>
+
+	<s:VGroup width="75%"
+			  height="100%">
+
+		<s:Panel title="Editar Dados Pessoais"
+				 width="100%"
+				 
+				 height="100%">
+
+			<s:layout>
+				<s:VerticalLayout gap="5"
+								  paddingBottom="5"
+								  paddingLeft="5"
+								  paddingRight="5"
+								  paddingTop="5"/>
+			</s:layout>
+
+			<s:Label text="E-mail"/>
+			<s:TextInput width="100%"
+						 id="txtEmail"
+						 text="{LoginRepository.getInstance().loggedUser.email}"/>
+
+			<s:Label text="Mudar sua senha"/>
+			<s:HGroup width="100%"
+					  verticalAlign="middle">
+
+				<s:Label text="Senha Atual:"/>
+				<s:TextInput id="txtSenhaAtual"
+							 displayAsPassword="true"
+							 width="100"/>
+				<s:Label text="Nova Senha:"/>
+				<s:TextInput id="txtNovaSenha"
+							 displayAsPassword="true"
+							 width="100"/>
+				<s:Label text="Confirmar:"/>
+				<s:TextInput id="txtNovaSenhaConfirmar"
+							 displayAsPassword="true"
+							 width="100"/>
+
+			</s:HGroup>
+
+			<s:Label text="Avatar"/>
+			<s:HGroup width="100%"
+					  verticalAlign="middle">
+				<s:Image source="{LoginRepository.getInstance().loggedUser.imagem}"
+						 smooth="true"
+						 id="avatar"
+						 width="50"
+						 height="50"/>
+				<s:Button label="Enviar uma nova foto"
+						  height="30"
+						  click="startUpload(event)"/>
+				<s:Button label="Tirar com a webcam"
+						  height="30"
+						  click="startWebcam(event)"/>
+			</s:HGroup>
+
+
+			<s:Label id="txtEditarFoto"
+					 text="Toque em 'Editar Perfil' para enviar a sua imagem"
+					 visible="false"
+					 includeInLayout="false"/>
+		</s:Panel>
+
+		<s:Panel width="100%"
+				 height="100%"
+				 title="Mensagem"
+				 >
+			<s:controlBarContent>
+				<ui:RichTextControlBar id="richTextEditor"
+									   editor="{editor}"/>
+			</s:controlBarContent>
+
+			<s:TextArea id="editor"
+						focusEnabled="false"
+						width="100%"
+						height="100%"
+						selectionChange="richTextEditor.editor_selectionChangeHandler(event);"/>
+
+		</s:Panel>
+
+		<s:Button width="100%"
+				  height="30"
+				  label="Editar Perfil"
+				  click="editarPerfil(event)"/>
+
+	</s:VGroup>
+
+	<s:Panel width="35%"
+			 height="100%"
+			 
+			 title="Suas Expertises">
+
+		<s:controlBarContent>
+			<s:HGroup width="100%"
+					  verticalAlign="middle">
+				<s:ComboBox width="100%"
+							labelField="nome"
+							dataProvider="{this.expertises}"
+							rollOverColor="#CCCCCC"
+							selectionColor="#CCCCCC"
+							id="comboExpertises"
+							change="onExpertisesChange(event)"
+							itemRenderer="com.pineapple.frontend.views.renderers.ExpertiseItemRenderer"/>
+				<mx:ColorPicker id="colorCP"
+								skin="mx.skins.spark.ColorPickerSkin"
+								dataProvider="{ControladorExpertises.cores}"/>
+				<s:Button label="Adicionar"
+						  height="30"
+						  click="adicionarExpertise(event)"/>
+				<s:Button icon="{AssetManager.BinClosed}"
+						  width="20"
+						  height="30"
+						  id="btRemove"
+						  dragEnter="dragEnterHandler(event)"
+						  dragDrop="dragDropHandler(event)"
+						  visible="false"
+						  includeInLayout="false"/>
+			</s:HGroup>
+		</s:controlBarContent>
+
+		<s:List id="listExpertises"
+				width="100%"
+				height="100%"
+				labelField="nome"
+				dragEnabled="true"
+				itemRenderer="com.pineapple.frontend.views.renderers.ExpertiseItemRenderer"
+				rollOverColor="#CCCCCC"
+				dragStart="onMouseDown(event)"
+				selectionColor="#CCCCCC"
+				dataProvider="{expertisesUser}"
+				borderVisible="false"/>
+	</s:Panel>
+
+</ui:ResizableTitleWindow>

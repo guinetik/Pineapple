@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Skin xmlns:s="library://ns.adobe.com/flex/spark"
+		xmlns:fx="http://ns.adobe.com/mxml/2009"
+		xmlns:d="http://ns.adobe.com/fxg/2008/dt"
+		width="24" height="24">
+	<fx:Metadata>[HostComponent("spark.components.Button")]</fx:Metadata>
+	<s:states>
+		<s:State name="up"/>
+		<s:State name="over"/>
+		<s:State name="down"/>
+		<s:State name="disabled"/>
+	</s:states>
+	<fx:DesignLayer>
+		<s:BitmapImage x="0" y="0" smooth="true"
+					   source="@Embed('/assets/bg-down.png')"
+					   visible.disabled="false"
+					   visible.over="false"
+					   visible.up="false">
+			<s:mask>
+				<s:Group x="0" y="0">
+					<s:Path winding="evenOdd" data="M 2.45 0 L 21.95 0 C 23.1 0 23.95 0.85 23.95 1.95 L 23.95 21.2 C 23.95 22.35 23.1 23.2 21.95 23.2 L 2.45 23.2 C 1.35 23.2 0.45 22.35 0.45 21.2 L 0.45 1.95 C 0.45 0.85 1.35 0 2.45 0">
+						<s:fill>
+							<s:SolidColor color="#ff0000"/>
+						</s:fill>
+					</s:Path>
+				</s:Group>
+			</s:mask>
+		</s:BitmapImage>
+		<s:BitmapImage x="0" y="0" smooth="true"
+					   source="@Embed('/assets/bg-hover.png')"
+					   visible.disabled="false"
+					   visible.down="false"
+					   visible.up="false">
+			<s:mask>
+				<s:Group x="0" y="0">
+					<s:Path winding="evenOdd" data="M 2.45 0 L 21.95 0 C 23.1 0 23.95 0.85 23.95 1.95 L 23.95 21.2 C 23.95 22.35 23.1 23.2 21.95 23.2 L 2.45 23.2 C 1.35 23.2 0.45 22.35 0.45 21.2 L 0.45 1.95 C 0.45 0.85 1.35 0 2.45 0">
+						<s:fill>
+							<s:SolidColor color="#ff0000"/>
+						</s:fill>
+					</s:Path>
+				</s:Group>
+			</s:mask>
+		</s:BitmapImage>
+		<s:BitmapImage x="0" y="0" alpha="0.8" smooth="true"
+					   source="@Embed('/assets/bg.png')"
+					   alpha.disabled="0.5"
+					   visible.down="false"
+					   visible.over="false">
+			<s:mask>
+				<s:Group x="0" y="0">
+					<s:Path winding="evenOdd" data="M 2.45 0 L 21.95 0 C 23.1 0 23.95 0.85 23.95 1.95 L 23.95 21.2 C 23.95 22.35 23.1 23.2 21.95 23.2 L 2.45 23.2 C 1.35 23.2 0.45 22.35 0.45 21.2 L 0.45 1.95 C 0.45 0.85 1.35 0 2.45 0">
+						<s:fill>
+							<s:SolidColor color="#ff0000"/>
+						</s:fill>
+					</s:Path>
+				</s:Group>
+			</s:mask>
+		</s:BitmapImage>
+		<s:BitmapImage x="3" y="2" smooth="true"
+					   source="@Embed('/assets/zoom-in.png')"
+					   alpha.disabled="0.5"/>
+	</fx:DesignLayer>
+</s:Skin>

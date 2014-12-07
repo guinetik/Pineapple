@@ -1,0 +1,283 @@
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="100%"
+		 height="100%"
+		 initialize="onInit(event)"
+		 xmlns:views="com.pineapple.frontend.views.*"
+		 xmlns:controllers="com.pineapple.business.controllers.*"
+		 xmlns:generic="com.pineapple.frontend.views.generic.*"
+		 xmlns:ui="com.pineapple.frontend.views.ui.*"
+		 xmlns:paneis="com.pineapple.frontend.views.paneis.*"
+		 xmlns:sparkTree="com.sparkTree.*">
+
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.AssetManager;
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.AtividadeVO;
+			import com.pineapple.business.model.GenericObject;
+			import com.pineapple.business.model.ProjectTreeDataDescriptor;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.model.SprintVO;
+			import com.pineapple.business.model.UserType;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			import com.pineapple.frontend.views.paneis.VisualizarAtividades;
+			import com.pineapple.frontend.views.paneis.VisualizarProjeto;
+			import com.pineapple.frontend.views.paneis.VisualizarSprint;
+			import com.pineapple.frontend.views.ui.UIEvent;
+			import com.sparkTree.TreeEvent;
+
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+
+			import spark.events.IndexChangeEvent;
+
+			[Bindable]
+			private var sprints:ArrayCollection;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				menuController=new MenuController();
+				menuController.root=this.root;
+				menuController.addEventListener(UIEvent.REFRESH_UI, onRefreshUI);
+
+				getProjetos();
+
+				visualizarIdeias.hideCloseButton();
+				visualizarIdeias.getData();
+
+			}
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				sprints=event.data;
+				CursorManager.removeBusyCursor();
+				expandAll();
+
+			}
+
+			protected function onChange(event:MouseEvent):void
+			{
+
+				var item:Object=list.selectedItem;
+
+				if (!itemOpening)
+				{
+
+					if (item is ProjetoVO)
+					{
+
+						menuController.visualizarProjeto(item as ProjetoVO);
+
+					}
+					else if (item is SprintVO)
+					{
+
+						menuController.visualizarSprint(item as SprintVO);
+
+
+					}
+					else if (item is AtividadeVO)
+					{
+
+						menuController.visualizarAtividade(item as AtividadeVO);
+
+					}
+
+				}
+
+			}
+
+			protected function filtrarDados(event:MouseEvent):void
+			{
+
+				sprints.filterFunction=filterFirst;
+				this.sprints.refresh();
+				this.btLimparFiltros.includeInLayout=true;
+				this.btLimparFiltros.visible=true;
+
+			}
+
+			private function filterFirst(item:Object):Boolean
+			{
+
+				if (item is GenericObject)
+				{
+
+					var p:GenericObject=item as GenericObject;
+					if (p.nome.match(new RegExp(txtFiltros.text, 'i')))
+						return true;
+					else
+						return false;
+
+				}
+				else
+				{
+
+					return false;
+
+				}
+
+			}
+
+			protected function limparFiltros(event:MouseEvent):void
+			{
+
+				this.btLimparFiltros.includeInLayout=false;
+				this.btLimparFiltros.visible=false;
+				this.sprints.filterFunction=null;
+				this.sprints.refresh();
+
+			}
+
+			private function expandAll():void
+			{
+
+				var d:IList=list.dataProvider;
+				for (var i:int=0; i < d.length; i++)
+				{
+
+					list.expandItem(d.getItemAt(i));
+
+				}
+
+			}
+
+			private var itemOpening:Boolean;
+
+			private var menuController:MenuController;
+
+			protected function onItemOpen(event:TreeEvent):void
+			{
+
+
+				itemOpening=false;
+
+			}
+
+			protected function onItemOpening(event:TreeEvent):void
+			{
+				itemOpening=true;
+
+			}
+
+			protected function onRefreshUI(event:Event):void
+			{
+
+				getProjetos();
+
+			}
+
+			public function getProjetos():void
+			{
+
+				if (LoginRepository.getInstance().loggedUser.entidade == UserType.USER_ALUNO)
+				{
+
+					this.controller.getMeusProjetos();
+
+				}
+				else
+				{
+
+					this.controller.getProjetosByProfessor(LoginRepository.getInstance().loggedUser.login, "TREE");
+
+				}
+
+				controller.getSprints(false);
+				CursorManager.setBusyCursor();
+				notifications.getConvites();
+
+			}
+			
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<controllers:ControladorProjetos id="controller"
+										 data_return="onDataReturn(event)"/>
+	</fx:Declarations>
+
+	<mx:HDividedBox width="100%"
+					paddingLeft="5"
+					paddingRight="5"
+					paddingBottom="5"
+					height="100%">
+
+		<mx:VDividedBox width="60%"
+						height="100%">
+
+			<paneis:VisualizarIdeias title="Últimas Ideias Enviadas"
+									 id="visualizarIdeias"
+									 width="100%"
+									 height="50%"
+									 intent="GET_ULTIMAS_IDEIAS"/>
+
+			<paneis:NotificacoesProfessor width="100%"
+										  id="notifications"
+										  refresh_ui="onRefreshUI(event)"
+										  height="50%"/>
+
+		</mx:VDividedBox>
+
+		<s:Panel width="40%"
+				 title="Navegador de Projetos"
+				 height="100%">
+
+			<s:controlBarContent>
+
+				<s:HGroup verticalAlign="middle"
+						  width="100%">
+					<s:Label text="Filtrar: "
+							 paddingTop="1"/>
+					<s:TextInput width="100%"
+								 id="txtFiltros"/>
+					<s:Button height="30"
+							  icon="{AssetManager.Search}"
+							  click="filtrarDados(event)"/>
+					<s:Button height="30"
+							  label="Limpar Filtros"
+							  id="btLimparFiltros"
+							  visible="false"
+							  includeInLayout="false"
+							  click="limparFiltros(event)"/>
+				</s:HGroup>
+
+			</s:controlBarContent>
+
+			<s:layout>
+				<s:VerticalLayout gap="5"/>
+			</s:layout>
+
+			<sparkTree:Tree width="100%"
+							height="100%"
+							id="list"
+							dataDescriptor="{new ProjectTreeDataDescriptor()}"
+							dataProvider="{this.sprints}"
+							labelField="nome"
+							borderVisible="false"
+							useVirtualLayout="false"
+							doubleClickEnabled="true"
+							doubleClick="onChange(event)"
+							itemOpen="onItemOpen(event)"
+							itemOpening="onItemOpening(event)"
+							itemRenderer="com.pineapple.frontend.views.renderers.ProjectListItemRenderer"/>
+
+			<s:Label text="*Use o click duplo do mouse para visualizar os itens"
+					 verticalAlign="middle"
+					 height="30"
+					 paddingLeft="5"/>
+
+		</s:Panel>
+
+	</mx:HDividedBox>
+
+
+</s:Group>

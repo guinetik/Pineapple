@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				height="30"
+				dataChange="onDataChange(event)"
+				autoDrawBackground="true">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.model.ExpertiseVO;
+
+			import mx.events.FlexEvent;
+
+			[Bindable]
+			private var bgColor:uint;
+
+			protected function onDataChange(event:FlexEvent):void
+			{
+
+				var e:ExpertiseVO=this.data as ExpertiseVO;
+
+				bgColor=uint(e.color);
+				
+				/* this.setStyle("contentBackgroundColor", bgColor);
+				this.invalidateProperties();
+				this.invalidateDisplayList(); */
+
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Rect top="0" bottom="0" right="0" left="0">
+		<s:fill>
+			<s:SolidColor color="{bgColor}" alpha="0.5"/>
+		</s:fill>
+	</s:Rect>
+
+	<s:Label text="{data.nome}"
+			 verticalAlign="middle"
+			 paddingTop="5"
+			 paddingLeft="5"
+			 width="100%"
+			 height="100%"/>
+
+</s:ItemRenderer>

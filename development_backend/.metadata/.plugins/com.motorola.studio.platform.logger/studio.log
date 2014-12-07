@@ -1,0 +1,36 @@
+2012-04-30 13:10:51,416 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: AVD2.33 Status: OFF
+2012-04-30 13:10:51,417 [Worker-3] DEBUG class com.motorola.studio.android.AndroidPlugin - Notify SDK loader listeners
+2012-04-30 13:10:51,421 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorSmart31 Status: OFF
+2012-04-30 13:10:51,420 [Worker-1] INFO  class com.motorola.studio.android.installer.startup.InstallationChecker - Is there any SDK set? true
+2012-04-30 13:10:51,429 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorSmartphone Status: OFF
+2012-04-30 13:10:51,429 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorTablet Status: OFF
+2012-04-30 13:10:51,429 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorQVGA Status: OFF
+2012-04-30 13:10:51,444 [Worker-1] DEBUG class com.motorola.studio.android.ophone.OPhonePlugin - Added SDK listener to perform configurations when an OPhone SDK is loaded.
+2012-04-30 13:10:51,463 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: AVD2.33 Status: com.motorola.studio.android.emulator.status.notavailable
+2012-04-30 13:10:51,463 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorSmart31 Status: com.motorola.studio.android.emulator.status.notavailable
+2012-04-30 13:10:51,463 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorSmartphone Status: com.motorola.studio.android.emulator.status.notavailable
+2012-04-30 13:10:51,464 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorTablet Status: com.motorola.studio.android.emulator.status.notavailable
+2012-04-30 13:10:51,464 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorQVGA Status: com.motorola.studio.android.emulator.status.notavailable
+2012-04-30 13:10:51,478 [Worker-1] INFO  Studio for Android - [Status: id=IDLE;name=IDLE]
+2012-04-30 13:10:51,479 [Worker-1] INFO  Studio for Android - [Status: id=com.motorola.studio.android.emulator.status.offlineNoData;name=Offline (no user data)]
+2012-04-30 13:10:51,479 [Worker-1] INFO  Studio for Android - [Status: id=com.motorola.studio.android.handset.status.handsetonline;name=Online]
+2012-04-30 13:10:51,479 [Worker-1] INFO  Studio for Android - [Status: id=com.motorola.studio.android.emulator.status.online;name=Online]
+2012-04-30 13:10:51,479 [Worker-1] INFO  Studio for Android - [Status: id=com.motorola.studio.android.remote.status.connected;name=Connected]
+2012-04-30 13:10:51,479 [Worker-1] INFO  Studio for Android - [Status: id=com.motorola.studio.android.emulator.status.notavailable;name=Not available]
+2012-04-30 13:10:51,479 [Worker-1] INFO  Studio for Android - [Status: id=OFF;name=OFF]
+2012-04-30 13:10:51,479 [Worker-1] INFO  Studio for Android - [Status: id=INACTIVE;name=INACTIVE]
+2012-04-30 13:10:51,479 [Worker-1] INFO  Studio for Android - [Status: id=com.motorola.studio.android.remote.status.disconnected;name=Disconnected]
+2012-04-30 13:10:51,479 [Worker-1] INFO  Studio for Android - [Status: id=com.motorola.studio.android.emulator.status.offline;name=Offline]
+2012-04-30 13:10:51,541 [Worker-0] DEBUG class com.motorola.studio.android.AndroidPlugin - Notify SDK loader listeners
+2012-04-30 13:10:51,542 [Worker-0] DEBUG class com.motorola.studio.android.ophone.OPhonePlugin$1 - An SDK was just loaded. Check if it is an OPhone SDK
+2012-04-30 13:10:51,546 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorSmartphone Status: com.motorola.studio.android.emulator.status.offline
+2012-04-30 13:10:52,083 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorSmart31 Status: com.motorola.studio.android.emulator.status.offline
+2012-04-30 13:10:52,435 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorTablet Status: com.motorola.studio.android.emulator.status.offline
+2012-04-30 13:10:52,733 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: AVD2.33 Status: com.motorola.studio.android.emulator.status.offline
+2012-04-30 13:10:52,733 [Instance Event Manager] INFO  Studio for Android - The android device instance status was updated: EmuladorQVGA Status: com.motorola.studio.android.emulator.status.offline
+2012-04-30 13:10:58,600 [main] DEBUG class com.motorola.studio.android.ophone.OPhonePlugin - Removed SDK listener that performs OPhone configurations when an SDK is loaded.
+2012-04-30 13:10:58,947 [main] DEBUG Studio for Android - org.eclipse.sequoyah.device.framework.wizard.DeviceWizardPlugin-SHUTDOWN
+2012-04-30 13:10:58,954 [main] DEBUG Studio for Android - org.eclipse.sequoyah.device.service.start.StartServicePlugin-SHUTDOWN
+2012-04-30 13:10:59,985 [main] DEBUG Studio for Android - org.eclipse.sequoyah.device.framework.ui.DeviceUIPlugin-SHUTDOWN
+2012-04-30 13:10:59,997 [main] DEBUG Studio for Android - org.eclipse.sequoyah.device.service.stop.StopServicePlugin-SHUTDOWN
+2012-04-30 13:10:59,997 [main] DEBUG Studio for Android - org.eclipse.sequoyah.device.framework.DevicePlugin-SHUTDOWN

@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Module xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark"
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  width="100%"
+		  height="100%"
+		  initialize="onInit(event)"
+		  xmlns:ui="com.pineapple.frontend.views.ui.*"
+		  xmlns:controllers="com.pineapple.frontend.controllers.*"
+		  xmlns:controllers1="com.pineapple.business.controllers.*">
+	<fx:Script>
+		<![CDATA[
+			import com.guinetik.kinetic.external.ServerSide;
+			import com.pineapple.business.events.DataReturnEvent;
+
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+
+			private var fileRef:FileReference;
+			private var filename:String;
+
+			[Bindable]
+			private var usuarios:ArrayCollection;
+
+			[Bindable]
+			private var projetos:ArrayCollection;
+
+			[Bindable]
+			private var equipes:ArrayCollection;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				getUsers();
+				getProjetos();
+				getEquipes();
+
+			}
+
+			protected function startUpload(event:MouseEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+
+				filename=new Date().time.toString() + ".xls";
+				fileRef.upload(new URLRequest("http://projects.guinetik.com/public/pineapple_backend/upload.php?newName=" + filename));
+
+			}
+
+			protected function onUploadComplete(event:DataEvent):void
+			{
+
+				trace("HomeAdmin.onUploadComplete(", event.data, ")");
+
+				if (Boolean(event.data))
+				{
+
+					xlsProcessor.processarXLS(this.filename);
+
+				}
+				else
+				{
+
+					Alert.show("Houve um problema ao enviar o seu arquivo. Tente novamente", "Erro");
+					CursorManager.removeBusyCursor();
+
+				}
+
+			}
+
+			protected function onFileSelectComplete(event:Event):void
+			{
+
+				txtFileName.text=fileRef.name;
+
+			}
+
+			protected function selectFile(event:MouseEvent):void
+			{
+
+				fileRef=new FileReference();
+				fileRef.addEventListener(Event.SELECT, onFileSelectComplete);
+				fileRef.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, onUploadComplete);
+				var typeFilter:FileFilter=new FileFilter("Planilhas Excel(*.xls)", "*.xls");
+				fileRef.browse([typeFilter]);
+
+			}
+
+			protected function onXLSProcessingReturn(event:DataReturnEvent):void
+			{
+
+				if (Boolean(event.result) == true)
+				{
+
+					Alert.show("Usuários cadastrados com sucesso!", "Sucesso");
+					CursorManager.removeBusyCursor();
+					getUsers();
+
+				}
+				else
+				{
+
+					Alert.show("Houve um problema ao processar o seu arquivo. Verifique o formato da planilha e tente novamente", "Erro");
+					CursorManager.removeBusyCursor();
+
+				}
+
+			}
+
+			protected function downloadModelo(event:MouseEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+				fileRef=new FileReference();
+				fileRef.addEventListener(Event.COMPLETE, onDownloadComplete);
+				fileRef.download(new URLRequest("http://projects.guinetik.com/public/pineapple/assets/pineapple_users_modelo.xls"));
+
+			}
+
+			protected function onDownloadComplete(event:Event):void
+			{
+
+				CursorManager.removeBusyCursor();
+				Alert.show("O download foi concluído com sucesso!", "Sucesso");
+
+			}
+
+			protected function onUsuariosReturn(event:DataReturnEvent):void
+			{
+
+				trace("HomeAdmin.onUsuariosReturn(", event.data.length, ")");
+
+				usuarios=event.data;
+				CursorManager.removeBusyCursor();
+
+			}
+
+			private function getUsers():void
+			{
+
+				controllerUsuario.getListaUsuarios();
+				CursorManager.setBusyCursor();
+
+			}
+
+			public function getProjetos():void
+			{
+
+				controllerProjetos.getAllProjects();
+				CursorManager.setBusyCursor();
+
+			}
+			
+			public function getEquipes():void
+			{
+				
+				CursorManager.setBusyCursor();
+				controllerEquipes.getEquipes();
+				
+			}
+
+			protected function onReturnProjetos(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				this.projetos=event.data;
+
+			}
+
+			protected function onEquipesReturn(event:DataReturnEvent):void
+			{
+				
+				this.equipes = event.data;
+				CursorManager.removeBusyCursor();
+
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:XLSController id="xlsProcessor"
+								   data_return="onXLSProcessingReturn(event)"/>
+		<controllers1:ControladorUsuario id="controllerUsuario"
+										 data_return="onUsuariosReturn(event)"/>
+		<controllers1:ControladorProjetos id="controllerProjetos"
+										  data_return="onReturnProjetos(event)"/>
+		<controllers1:ControladorEquipe id="controllerEquipes"
+										data_return="onEquipesReturn(event)"/>
+	</fx:Declarations>
+
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+
+	<ui:Header width="100%"
+			   height="115"/>
+
+	<mx:HDividedBox width="100%"
+					height="100%"
+					paddingLeft="5"
+					paddingRight="5">
+
+		<mx:VDividedBox width="100%"
+						height="100%">
+
+			<mx:HDividedBox width="100%"
+							height="60%">
+
+				<s:Panel width="50%"
+						 height="100%"
+						 title="Cadastrar Usuários em Massa">
+
+					<mx:VDividedBox width="100%"
+									height="100%"
+									paddingBottom="5"
+									paddingLeft="5"
+									paddingRight="5"
+									paddingTop="5">
+						<s:Panel width="100%"
+								 height="50%"
+								 title="Enviar um arquivo XLS">
+							<s:layout>
+								<s:VerticalLayout paddingBottom="5"
+												  paddingTop="5"
+												  paddingLeft="5"
+												  paddingRight="5"/>
+							</s:layout>
+							<mx:Text width="100%">
+								<mx:text>Cadastre usuários em massa enviando uma planilha pré-formatada com os dados dos usuários. Clique no botão abaixo para fazer o download do modelo, edite o modelo com os seus dados e faça o upload do XLS.</mx:text>
+							</mx:Text>
+							<s:HGroup width="100%"
+									  verticalAlign="middle">
+								<s:TextInput width="100%"
+											 id="txtFileName"/>
+								<s:Button label="Procurar Arquivos"
+										  height="30"
+										  click="selectFile(event)"/>
+								<s:Button label="Enviar"
+										  height="30"
+										  click="startUpload(event)"/>
+							</s:HGroup>
+							<mx:LinkButton label="Baixar um arquivo de Modelo"
+										   paddingLeft="-3"
+										   click="downloadModelo(event)"/>
+						</s:Panel>
+						<s:Panel width="100%"
+								 height="50%"
+								 title="Cadastrar por CSV">
+							<s:layout>
+								<s:VerticalLayout paddingBottom="5"
+												  paddingTop="5"
+												  paddingLeft="5"
+												  paddingRight="5"/>
+							</s:layout>
+							<mx:Text width="100%">
+								<mx:text>Você também pode usar a caixa de texto abaixo para cadastrar usuários num formato CSV.</mx:text>
+							</mx:Text>
+							<s:TextArea width="100%"
+										height="100%"/>
+							<s:Group width="100%">
+								<mx:LinkButton label="Baixar um arquivo de Modelo"
+											   top="3"
+											   left="-10"
+											   click="downloadModelo(event)"/>
+								<s:Button label="Enviar"
+										  height="30"
+										  right="0"/>
+							</s:Group>
+						</s:Panel>
+					</mx:VDividedBox>
+
+				</s:Panel>
+
+				<s:Panel width="50%"
+						 height="100%"
+						 title="Usuarios">
+
+					<s:controlBarContent>
+						<s:Button height="30"
+								  label="Visualizar Usuário"/>
+						<s:Button height="30"
+								  label="Excluir Usuário"/>
+					</s:controlBarContent>
+
+					<s:List id="listaUsuarios"
+							dataProvider="{usuarios}"
+							labelField="nome"
+							borderVisible="false"
+							width="100%"
+							itemRenderer="com.pineapple.frontend.views.renderers.GenericItemRenderer"
+							height="100%"/>
+				</s:Panel>
+
+
+			</mx:HDividedBox>
+
+			<mx:HDividedBox width="100%"
+							height="60%">
+
+				<s:Panel width="50%"
+						 height="100%"
+						 title="Projetos">
+
+					<s:controlBarContent>
+						<s:Button height="30"
+								  label="Visualizar Projeto"/>
+						<s:Button height="30"
+								  label="Excluir Projeto"/>
+					</s:controlBarContent>
+					
+					<s:List id="listaProjetos"
+							dataProvider="{projetos}"
+							labelField="nome"
+							borderVisible="false"
+							itemRenderer="com.pineapple.frontend.views.renderers.GenericItemRenderer"
+							width="100%"
+							height="100%"/>
+				</s:Panel>
+				
+				<s:Panel width="50%"
+						 height="100%"
+						 title="Equipes">
+					
+					<s:controlBarContent>
+						<s:Button height="30" label="Visualizar Equipe"/>
+						<s:Button height="30" label="Excluir Equipe"/>
+					</s:controlBarContent>
+					
+					<s:List id="listaEquipes"
+							dataProvider="{equipes}"
+							labelField="nome"
+							borderVisible="false"
+							itemRenderer="com.pineapple.frontend.views.renderers.GenericItemRenderer"
+							width="100%"
+							height="100%"/>
+					
+				</s:Panel>
+
+			</mx:HDividedBox>
+
+		</mx:VDividedBox>
+
+	</mx:HDividedBox>
+
+</s:Module>

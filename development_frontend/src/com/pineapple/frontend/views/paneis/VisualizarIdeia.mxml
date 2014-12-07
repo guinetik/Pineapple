@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 initialize="onInit(event)"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 title="Visualizar Ideia"
+						 close="onClose(event)"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 width="800"
+						 height="600"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*"
+						 xmlns:controllers="com.pineapple.business.controllers.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			import com.pineapple.frontend.views.ui.UIEvent;
+			
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+
+
+			[Bindable]
+			public var ideia:ProjetoVO;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				txtNome.setStyle("fontWeight", "bold");
+				txtNome.setStyle("fontSize", "14");
+				
+				this.controlBarVisible = false;
+
+			}
+
+			public function init():void
+			{
+
+				txtResumo.textFlow=TextConverter.importToFlow(ideia.descricao, TextConverter.TEXT_FIELD_HTML_FORMAT);
+				
+				if(this.ideia.autor == LoginRepository.getInstance().loggedUser.nome)
+				{
+					
+					this.controlBarVisible = true;
+					
+				}
+
+			}
+
+			public function getIdeaById(id_ideia:int):void
+			{
+
+				CursorManager.setBusyCursor();
+				controllerIdeas.getProjetosById(id_ideia);
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			protected function openProfile(event:MouseEvent):void
+			{
+
+				var c:MenuController=new MenuController();
+				c.root=this.root;
+				c.abrirPerfil(ideia.autor);
+
+			}
+
+			protected function onIdeaReturn(event:DataReturnEvent):void
+			{
+
+				this.ideia=event.result as ProjetoVO;
+				init();
+				CursorManager.removeBusyCursor();
+
+			}
+
+			protected function editarResumo(event:MouseEvent):void
+			{
+				
+				var menuController:MenuController = new MenuController();
+				menuController.root = this;
+				menuController.editarResumo(this.ideia);
+				//menuController.addEventListener(UIEvent.REFRESH_UI, onRefreshUI);
+				
+				this.dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+				PopUpManager.removePopUp(this);
+
+			}
+			
+			protected function onRefreshUI(event:Event):void
+			{
+				
+				this.dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+				PopUpManager.removePopUp(this);
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorProjetos id="controllerIdeas"
+										 data_return="onIdeaReturn(event)"/>
+	</fx:Declarations>
+
+	<ui:layout>
+		<s:VerticalLayout gap="5"
+						  paddingBottom="5"
+						  paddingLeft="5"
+						  paddingRight="5"
+						  paddingTop="5"/>
+	</ui:layout>
+
+	<ui:controlBarContent>
+		<s:Button label="Editar Resumo"
+				  height="30"
+				  click="editarResumo(event)"/>
+	</ui:controlBarContent>
+
+	<s:HGroup width="100%"
+			  verticalAlign="middle"
+			  horizontalAlign="right">
+		<s:Label id="txtNome"
+				 text="{ideia.nome}"
+				 width="100%"/>
+		<mx:LinkButton label="{'Enviado por: ' + ideia.autor}"
+					   click="openProfile(event)"/>
+		<s:Image source="{ideia.imagem}"
+				 width="30"
+				 height="20"
+				 smooth="true"/>
+	</s:HGroup>
+	<s:TextArea width="100%"
+				id="txtResumo"
+				height="100%"/>
+
+</ui:ResizableTitleWindow>

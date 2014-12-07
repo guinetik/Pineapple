@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   xmlns:mx="library://ns.adobe.com/flex/mx"
+		   width="350" height="350"
+		   title="Ajustar Avatar"
+		   close="onClose(event)"
+		   creationComplete="init()" xmlns:skins="com.pineapple.frontend.views.skins.*">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			
+			
+			//////////////////Interface
+			//public function set ScaleStep(v:Number):void
+			//public function set ImageData(bitmap:BitmapData):void
+			//public function setCropRectSize(width:Number, height:Number):void
+			//public function doCrop():BitmapData
+			
+			public function set ScaleStep(v:Number):void
+			{
+				this._scaleStep = v;
+			}
+
+			public function set ImageData(bitmap:BitmapData):void
+			{
+				_contentWidth = bitmap.width;
+				_contentHeight = bitmap.height;
+								
+				var scaleX:Number = _contentWidth / container.width;
+				var scaleY:Number = _contentHeight / container.height;
+				
+				var scale:Number = (scaleX < scaleY)?scaleX:scaleY;
+
+				targetImageOrig.source = new Bitmap(bitmap);
+				targetImageDrag.source = new Bitmap(bitmap);
+				
+				targetImageOrig.x = 0;
+				targetImageOrig.y = 0;
+				targetImageDrag.x = 0;
+				targetImageDrag.y = 0;
+				
+				_origBitmapDataBackup = bitmap;
+				delayCall(1, doScaleAtInit, (1/scale));
+			}
+						
+			public function setCropRectSize(width:Number, height:Number):void
+			{
+				_cropRectWidth = width;
+				_cropRectHeight = height;
+			}
+			
+			public function doCrop():BitmapData
+			{
+				var ret:BitmapData = new BitmapData(this.container.width, this.container.height);
+				var trans:Matrix = new Matrix;
+				//attention to the order of calling scale and translate
+				trans.scale(targetImageDrag.scaleX, targetImageDrag.scaleY);
+				trans.translate(targetImageDrag.x, targetImageDrag.y);
+				ret.draw(targetImageDrag, trans);
+				return ret;
+			}
+			
+			private var _scaleStep:Number = 0.1
+			
+			private var _origBitmapDataBackup:BitmapData = null;
+			private var _currentBitmapData:BitmapData = null;
+			private var currentScaleX:Number = 1;
+			private var currentScaleY:Number = 1;
+
+			private function doScaleAtInit(v:Number):void
+			{				
+				doScale(v, v);
+				
+				updateZoomAvailable();
+				
+				updateDraggingAvailable();
+				
+				updateCoordinate();
+			}
+			
+			private function doScale(scaleX:Number, scaleY:Number):void
+			{
+				var rect:Rectangle = _origBitmapDataBackup.rect;
+
+				var matrix:Matrix = new Matrix;
+				matrix.scale(scaleX, scaleY);
+				var bitmapData:BitmapData = new BitmapData(rect.width*scaleX, rect.height*scaleY);
+				bitmapData.draw(_origBitmapDataBackup, matrix, null, null, null, true);
+				
+				_currentBitmapData = bitmapData;
+				
+				targetImageDrag.source = new Bitmap(bitmapData);
+				targetImageOrig.source = new Bitmap(bitmapData);
+				
+				currentScaleX = scaleX;
+				currentScaleY = scaleY;
+			}
+			
+			private var _contentWidth:Number = 0;
+			private var _contentHeight:Number = 0;
+			private function init():void
+			{				
+				updateCoordinate();
+			}			
+			
+			private function mouseMoveHandler(e:MouseEvent):void
+			{
+				if (!_isDraging)
+				{
+					return;
+				}
+				
+				updateCoordinate();
+			}
+			
+			protected function btnStartDragging_mouseDownHandler(event:MouseEvent):void
+			{
+				this.stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHandler);
+				this.stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);
+				var w:Number = targetImageOrig.width * targetImageOrig.scaleX;
+				var h:Number = targetImageOrig.height * targetImageOrig.scaleY;
+				
+				var rect:Rectangle = new Rectangle;
+				rect.left = -(w - this.container.width);
+				rect.right = 0;
+				rect.top = -(h - this.container.height);
+				rect.bottom = 0;
+				this.targetImageDrag.startDrag(false, rect);
+				isDragging = true;
+			}
+			
+			private function mouseUpHandler(event:MouseEvent):void
+			{
+				this.stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHandler);
+				this.stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);
+				
+				this.targetImageDrag.stopDrag();
+				isDragging = false;
+			}			
+			
+			protected function btnZoomIn_clickHandler(event:MouseEvent):void
+			{				
+				doScale(currentScaleX + _scaleStep, currentScaleY + _scaleStep);
+				
+				//scale point is the container center.adjust
+				targetImageDrag.x -= (_scaleStep / 2) * this.container.width; 
+				targetImageDrag.y -= (_scaleStep / 2) * this.container.height; 
+				
+				updateZoomAvailable();
+				
+				updateDraggingAvailable();
+				
+				updateCoordinate();
+			}
+			
+			protected function btnZoomOut_clickHandler(event:MouseEvent):void
+			{
+				var scale:Number = 1;
+				if (_slightChangeX || _slightChangeY)
+				{
+					if (_slightChangeX)
+					{
+						scale = container.width / _contentWidth;
+					}
+					else if (_slightChangeY)
+					{
+						scale = container.height / _contentHeight;
+					}
+					
+					doScale(scale, scale);
+				}
+				else
+				{
+					doScale(currentScaleX - _scaleStep, currentScaleY - _scaleStep);					
+					scale = _scaleStep;
+				}
+				
+				//scale point is the container center.adjust
+				targetImageDrag.x += (scale / 2) * this.container.width; 
+				targetImageDrag.y += (scale / 2) * this.container.height; 
+				
+				//contrain in the container
+				targetImageDrag.x = (targetImageDrag.x > 0)?0:targetImageDrag.x;
+				
+				var tmpx:Number = -(_currentBitmapData.width - this.container.width);
+				targetImageDrag.x = (targetImageDrag.x < tmpx)?tmpx:targetImageDrag.x;
+				
+				targetImageDrag.y = (targetImageDrag.y > 0)?0:targetImageDrag.y;
+				var tmpy:Number = -(_currentBitmapData.height - this.container.height);
+				targetImageDrag.y = (targetImageDrag.y < tmpy) ? tmpy:targetImageDrag.y;
+				
+				updateZoomAvailable();
+				
+				updateDraggingAvailable();
+
+				updateCoordinate();
+			}
+			
+			private var _isDraging:Boolean = false;
+			private function set isDragging(b:Boolean):void
+			{
+				_isDraging = b;
+				if (b)
+				{
+					targetImageOrig.visible = true;
+					targetImageOrigDarkMask.visible = true;
+				}
+				else
+				{
+					targetImageOrig.visible = false;
+					targetImageOrigDarkMask.visible = false;
+				}
+			}
+			
+			private function updateCoordinate():void
+			{
+				var p:Point = new Point(targetImageDrag.x, targetImageDrag.y);
+				
+				var lp:Point = container.localToContent(p);
+				//you hack here, maybe the pixal is not working property.
+				//i plus two to compensate the image and its container's boarder width
+				targetImageOrig.x = lp.x + container.x + 2;
+				targetImageOrig.y = lp.y + container.y + 2;
+			}
+			
+			private function updateDraggingAvailable():void
+			{
+				var invalidX:Boolean = int(_currentBitmapData.width) <= int(this.container.width);
+				var invalidY:Boolean = int(_currentBitmapData.height) <= int(this.container.height);
+				_DragginEnable = true;
+				if (invalidX || invalidY)
+				{					
+					if (invalidX && invalidY)
+					{
+						_DragginEnable = false;
+					}
+					else if (invalidX)
+					{
+						btnStartDragging.EnableDirection = ButtonDrag.Vertical;
+					}
+					else if (invalidY)
+					{
+						btnStartDragging.EnableDirection = ButtonDrag.Horizontal;
+					}
+				}
+				else
+				{					
+					btnStartDragging.EnableDirection = ButtonDrag.Both;
+				}
+			}
+			
+			private static var _slightChangeLength:Number = 5;
+			private var _slightChangeX:Boolean = false;
+			private var _slightChangeY:Boolean = false;			
+			private function updateZoomAvailable():void
+			{				
+				_slightChangeX = false;
+				_slightChangeY = false;
+				
+				_zoomOutEnable = true;
+				_zoomInEnable = true;
+				
+				var currentDeltaX:Number = (_currentBitmapData.width - this.container.width);
+				var currentDeltaY:Number = (_currentBitmapData.height - this.container.height);
+				if (currentDeltaX > 0 && currentDeltaY > 0)
+				{
+					//can be zoom, next determine scale method
+					_zoomOutEnable = true;
+
+					var peekZoomoutScaleX:Number = currentScaleX - _scaleStep;
+					var peekZoomoutScaleY:Number = currentScaleY - _scaleStep;
+					var peekDeltaX:Number = (_origBitmapDataBackup.width * peekZoomoutScaleX - this.container.width);
+					var peekDeltaY:Number = (_origBitmapDataBackup.height * peekZoomoutScaleY - this.container.height);
+					
+					var minPeekDelta:Number = (peekDeltaX < peekDeltaY)? peekDeltaX:peekDeltaY;
+					if (minPeekDelta <= _slightChangeLength)
+					{
+						_slightChangeX = (minPeekDelta == peekDeltaX)?true:false;
+						_slightChangeY = (minPeekDelta == peekDeltaY)?true:false;
+					}
+					else
+					{
+						//ordinary scale
+					}
+				}
+				else
+				{
+					_zoomOutEnable = false;
+				}
+			}
+			
+			private function delayCall(time:int, callee:Function, arg:*=null):uint
+			{
+				if (time == 0)
+				{
+					null == arg?callee():callee(arg);
+					return 0;
+				}
+				
+				var handle:uint = 0;
+				handle = flash.utils.setInterval(
+					function():void
+					{
+						null == arg?callee():callee(arg);
+						
+						flash.utils.clearInterval(handle);						
+					}, time, null);
+				return handle;
+			}
+			
+			[Bindable] private var _zoomOutEnable:Boolean = false;
+			[Bindable] private var _zoomInEnable:Boolean = false;
+			[Bindable] private var _DragginEnable:Boolean = false;
+			
+			[Bindable] private var _cropRectWidth:Number = 150;
+			[Bindable] private var _cropRectHeight:Number = 150;			
+			
+			protected function onClose(event:CloseEvent):void
+			{
+				
+				PopUpManager.removePopUp(this);
+				
+			}
+			
+			protected function cropFoto(event:MouseEvent):void
+			{
+				
+				this.dispatchEvent(new Event(Event.CHANGE));
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:controlBarContent>
+		<s:Group width="100%">
+			<s:Button label="Cortar Imagem" click="cropFoto(event)" horizontalCenter="1"/>
+		</s:Group>
+	</s:controlBarContent>
+	
+	<s:Image id="targetImageOrig" visible="false"/>
+	<mx:Canvas id="targetImageOrigDarkMask" visible="false" backgroundColor="#000000" backgroundAlpha="0.7" width="100%" height="100%"/>
+	<mx:HBox horizontalAlign="center" verticalAlign="middle" width="100%" height="100%" horizontalGap="0">
+		<mx:Canvas id="container" width="{_cropRectWidth}" height="{_cropRectHeight}" borderStyle="solid"
+				   horizontalScrollPolicy="off" verticalScrollPolicy="off">
+			<mx:Image id="targetImageDrag"/>
+			<mx:HBox width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+				<skins:ButtonDrag id="btnStartDragging" useHandCursor="true" buttonMode="true" visible="{_DragginEnable}"
+											mouseDown="btnStartDragging_mouseDownHandler(event)"/>
+			</mx:HBox>
+			<mx:HBox width="100%" horizontalAlign="right" horizontalGap="3">
+				<s:Button id="btnZoomOut" skinClass="com.pineapple.frontend.views.skins.ButtonZoomOut" useHandCursor="true" buttonMode="true"
+						   enabled="{_zoomOutEnable}" click="btnZoomOut_clickHandler(event)"/>
+				<s:Button id="btnZoomIn" skinClass="com.pineapple.frontend.views.skins.ButtonZoomIn" useHandCursor="true" buttonMode="true"
+						  enabled="{_zoomInEnable}" click="btnZoomIn_clickHandler(event)"/>
+			</mx:HBox>
+		</mx:Canvas>
+	</mx:HBox>
+</s:TitleWindow>

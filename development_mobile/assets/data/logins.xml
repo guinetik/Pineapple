@@ -1,0 +1,7 @@
+<logins>
+
+	<user email="aluno@pineapple.com" senha="123" tipo_usuario="aluno"/>
+	<user email="professor@pineapple.com" senha="123" tipo_usuario="professor"/>
+	<user email="administrador@pineapple.com" senha="123" tipo_usuario="administrador"/>
+	
+</logins>

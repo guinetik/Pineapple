@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 title="Meus Projetos"
+						 close="onClose(event)"
+						 initialize="onInit(event)"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 width="1150"
+						 height="650"
+						 xmlns:controllers="com.pineapple.business.controllers.*"
+						 xmlns:ns="http://code.google.com/p/flexlib/"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*"
+						 xmlns:sparkTree="com.sparkTree.*"
+						 xmlns:paneis="com.pineapple.frontend.views.paneis.*">
+	<ui:layout>
+		<s:VerticalLayout/>
+	</ui:layout>
+
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.AssetManager;
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.AtividadeVO;
+			import com.pineapple.business.model.ProjectTreeDataDescriptor;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.model.SprintVO;
+			import com.pineapple.business.model.UserType;
+			import com.pineapple.business.model.UserVO;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.views.ui.UIEvent;
+
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+
+			import spark.events.IndexChangeEvent;
+
+			[Bindable]
+			private var projetos:ArrayCollection;
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+				if (LoginRepository.getInstance().loggedUser.entidade == UserType.USER_ALUNO)
+				{
+
+					this.controller.getMeusProjetos();
+
+				}
+				else
+				{
+
+					this.controller.getProjetosByProfessor(LoginRepository.getInstance().loggedUser.login, "TREE");
+
+				}
+
+			}
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				this.projetos=event.data;
+				this.list.selectedIndex=0;
+				expandAll();
+				onItemClick(null);
+				detalhesGroup.visible=true;
+
+			}
+
+			private function expandAll():void
+			{
+
+				var d:IList=list.dataProvider;
+				for (var i:int=0; i < d.length; i++)
+				{
+
+					list.expandItem(d.getItemAt(i));
+
+				}
+
+			}
+
+			protected function onItemClick(event:IndexChangeEvent):void
+			{
+
+				if (list.selectedItem is ProjetoVO)
+				{
+
+					this.currentState="VISUALIZAR_PROJETO";
+					this.visualizarProjeto.projeto=list.selectedItem as ProjetoVO;
+					this.visualizarProjeto.init();
+					this.visualizarProjeto.hideCloseButton();
+
+				}
+
+				if (list.selectedItem is SprintVO)
+				{
+
+					this.currentState="VISUALIZAR_SPRINT";
+					this.visualizarSprint.sprint=list.selectedItem as SprintVO;
+					this.visualizarSprint.init();
+					this.visualizarSprint.hideCloseButton();
+
+				}
+				if (list.selectedItem is AtividadeVO)
+				{
+
+					this.currentState="VISUALIZAR_ATIVIDADE";
+					this.visualizarAtividade.atividade=list.selectedItem as AtividadeVO;
+					this.visualizarAtividade.init();
+					visualizarAtividade.hideCloseButton();
+
+				}
+
+			}
+
+			protected function onRefreshUI(event:UIEvent):void
+			{
+
+				onInit(null);
+
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorProjetos id="controller"
+										 data_return="onDataReturn(event)"/>
+	</fx:Declarations>
+
+	<ui:states>
+		<s:State name="VISUALIZAR_PROJETO"/>
+		<s:State name="VISUALIZAR_SPRINT"/>
+		<s:State name="VISUALIZAR_ATIVIDADE"/>
+	</ui:states>
+
+	<mx:HDividedBox width="100%"
+					height="100%"
+					resizeToContent="true"
+					paddingLeft="5"
+					paddingBottom="5"
+					paddingTop="5"
+					paddingRight="5">
+
+		<s:Panel width="30%"
+				 height="100%"
+				 title="Navegador de Projetos">
+
+			<sparkTree:Tree width="100%"
+							height="100%"
+							id="list"
+							dataDescriptor="{new ProjectTreeDataDescriptor()}"
+							dataProvider="{this.projetos}"
+							labelField="nome"
+							useVirtualLayout="false"
+							borderVisible="false"
+							itemRenderer="com.pineapple.frontend.views.renderers.ProjectListItemRenderer"
+							change="onItemClick(event)"/>
+		</s:Panel>
+
+
+		<s:Group width="70%"
+				 height="100%"
+				 visible="false"
+				 id="detalhesGroup">
+
+			<paneis:VisualizarProjeto width="100%"
+									  height="100%"
+									  refresh_ui="onRefreshUI(event)"
+									  includeIn="VISUALIZAR_PROJETO"
+									  id="visualizarProjeto"/>
+			<paneis:VisualizarSprint width="100%"
+									 height="100%"
+									 includeIn="VISUALIZAR_SPRINT"
+									 refresh_ui="onRefreshUI(event)"
+									 id="visualizarSprint"/>
+			<paneis:VisualizarAtividades width="100%"
+										 height="100%"
+										 includeIn="VISUALIZAR_ATIVIDADE"
+										 refresh_ui="onRefreshUI(event)"
+										 id="visualizarAtividade"/>
+
+		</s:Group>
+
+	</mx:HDividedBox>
+
+</ui:ResizableTitleWindow>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+		initialize="onInit(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark" >
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.model.AtividadeStatus;
+			import com.pineapple.business.model.GenericObject;
+			import com.pineapple.business.model.ProjetoVO;
+			
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.events.FlexEvent;
+			
+			import spark.components.supportClasses.StyleableTextField;
+			
+			[Bindable]
+			private var vo:GenericObject;
+			
+			[Bindable] private var bgColor:uint;
+			
+			protected function onInit(event:FlexEvent):void
+			{
+				
+				trace("ResumoDetailView.onInit(", this.data, ")");
+				
+				this.vo = this.data as GenericObject;	
+				
+				trace(vo.status);
+				
+				if((data).status == AtividadeStatus.INCIADO)
+				{
+					
+					this.bgColor = 0xE7F27C;
+					
+				} else if((data).status == AtividadeStatus.ANDAMENTO)
+				{
+					
+					this.bgColor = 0xF1FF60;
+					
+				} else if((data).status == AtividadeStatus.FINALIZADO)
+				{
+					
+					this.bgColor = 0xD1F06E;
+					
+				}
+				
+				StyleableTextField(txtResumo.textDisplay).htmlText = vo.descricao;
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:Scroller width="100%"
+				height="100%">
+		
+		<s:viewport>			
+			
+			<s:VGroup width="100%"
+					  height="100%"
+					  paddingTop="5"
+					  paddingLeft="5"
+					  paddingRight="5"
+					  gap="0">
+				
+				<s:TextArea skinClass="spark.skins.mobile.TextAreaSkin"
+							id="txtResumo"
+							textAlign="justify"
+							width="100%"
+							editable="false"
+							borderVisible="false"/>
+				
+				<s:BorderContainer borderAlpha="0"
+								   id="bgStatus"
+								   width="100%"
+								   height="100"
+								   backgroundColor="{bgColor}">
+					
+					<s:Label id="txtNome"
+							 height="100%"
+							 text="{'Status: ' + this.vo.status}"
+							 verticalCenter="1"
+							 verticalAlign="middle"/>
+					
+				</s:BorderContainer>
+				
+			</s:VGroup>
+			
+		</s:viewport>
+		
+	</s:Scroller>
+	
+</s:View>

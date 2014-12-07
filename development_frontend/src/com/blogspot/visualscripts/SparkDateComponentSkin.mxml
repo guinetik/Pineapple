@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:fb="http://ns.adobe.com/flashbuilder/2009" 
+		xmlns:local="*" 
+		alpha.disabled="0.5" > 
+	<fx:Metadata>
+		<![CDATA[ [HostComponent("spark.components.List")]  ]]>
+	</fx:Metadata> 
+	
+	<fx:Script fb:purpose="styling">
+	<![CDATA[            
+		
+		private function prevMonth():void{
+			// updates its dataprovider
+			var foo:CalendarIList = dataGroup.dataProvider as CalendarIList;
+			if (foo.month == 0){
+				foo.setMonthAndYear(11, foo.year - 1);
+			}
+			else {
+				foo.setMonthAndYear(foo.month - 1, foo.year);
+			}
+		}
+		
+		private function nextMonth():void{
+			var foo:CalendarIList = dataGroup.dataProvider as CalendarIList;
+			if (foo.month == 11) {
+				foo.setMonthAndYear(0, foo.year+1);
+			}
+			else {
+				foo.setMonthAndYear(foo.month+1, foo.year);
+			}
+		}
+		
+	]]>
+	</fx:Script>
+	
+	<s:states>
+		<s:State name="normal" />
+		<s:State name="disabled" />
+	</s:states>
+	
+	<s:Rect left="0" right="0" top="0" bottom="0">
+		<s:stroke><s:SolidColorStroke weight="1" color="0x696969"/></s:stroke>
+		<s:fill><s:SolidColor color="0xFFFFFF" /></s:fill>
+	</s:Rect>
+	
+	<s:Rect width="100%" height="30" >
+		<s:fill>
+			<s:LinearGradient rotation="90">
+				<s:entries>
+					<s:GradientEntry color="0xFFFFFF" ratio="0" alpha="1"/>
+					<s:GradientEntry color="0xD8D8D8" ratio="1" alpha="1"/>
+				</s:entries>
+			</s:LinearGradient>
+		</s:fill>
+		<s:stroke><s:SolidColorStroke color="0x696969" /></s:stroke>
+	</s:Rect>
+	
+	<s:Group click="prevMonth()" y="6" x="4"
+			 rollOver="baFill.alpha=0.2" rollOut="baFill.alpha=0" 
+			 mouseDown="baFill.alpha=0.5" mouseUp="baFill.alpha=0.2">
+		<s:BitmapImage source="@Embed(source='backArrow.png')" x="6" y="5" />
+		<s:Ellipse width="19" height="19" >
+			<s:fill><s:SolidColor id="baFill" color="0x727272" alpha="0" /></s:fill>
+		</s:Ellipse>
+	</s:Group>
+	
+	<s:Label id="YearMonthLabel" left="30" right="30" y="10" textAlign="center"/>
+	
+	<s:Group click="nextMonth()" y="6" right="4"
+			 rollOver="fwFill.alpha=0.2" rollOut="fwFill.alpha=0" 
+			 mouseDown="fwFill.alpha=0.5" mouseUp="fwFill.alpha=0.2">
+		<s:BitmapImage source="@Embed(source='fwArrow.png')" x="8" y="5" />
+		<s:Ellipse width="19" height="19" >
+			<s:fill><s:SolidColor id="fwFill" color="0x727272" alpha="0" /></s:fill>
+		</s:Ellipse>
+	</s:Group>
+	
+	<s:Label text="S     M     T     W     T       F     S" top="42" x="12" fontWeight="bold"/>
+	
+	<s:DataGroup id="dataGroup" top="60" left="6" right="6" bottom="6"
+				 itemRenderer="com.blogspot.visualscripts.SparkDateComponentDayRenderer" >
+		<s:layout>
+			<s:TileLayout requestedColumnCount="7" requestedRowCount="6" 
+						  columnWidth="24" rowHeight="23"
+						  horizontalGap="0" verticalGap="0"/>
+		</s:layout>
+	</s:DataGroup>
+</s:Skin>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 title="Editar Atividade"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 close="onClose(event)"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 width="550"
+						 height="400"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*"
+						 xmlns:controllers="com.pineapple.business.controllers.*">
+
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.AtividadeVO;
+			
+			import flashx.textLayout.conversion.ConversionType;
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+
+			[Bindable]
+			public var atividade:AtividadeVO;
+
+			protected function editarAtividade(event:MouseEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+
+				atividade.descricao=TextConverter.export(editor.textFlow, TextConverter.TEXT_FIELD_HTML_FORMAT, ConversionType.STRING_TYPE).toString();
+				atividade.status=comboStatus.selectedItem;
+				atividade.nome=txtNome.text;
+
+				controller.salvarAtividade(atividade);
+
+			}
+
+			public function init():void
+			{
+
+				editor.textFlow=TextConverter.importToFlow(atividade.descricao, TextConverter.TEXT_FIELD_HTML_FORMAT);
+				getAtividadeStatus();
+				txtNome.text=atividade.nome;
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			private function getAtividadeStatus():void
+			{
+
+				for (var i:int=0; i < comboStatus.dataProvider.length; i++)
+				{
+
+					var s:String=comboStatus.dataProvider.getItemAt(i) as String;
+					if (s == atividade.status)
+						comboStatus.selectedIndex=i;
+
+				}
+
+
+			}
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+
+				if (event.result == true)
+				{
+
+					Alert.show("Atividade Editada", "Sucesso");
+					PopUpManager.removePopUp(this);
+
+				}
+				else
+				{
+
+					Alert.show("Erro ao editar a atividade", "Erro!");
+
+				}
+
+			}
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<controllers:ControladorAtividades id="controller"
+										   data_return="onDataReturn(event)"/>
+	</fx:Declarations>
+
+	<ui:layout>
+		<s:VerticalLayout paddingBottom="10"
+						  paddingLeft="10"
+						  paddingRight="10"
+						  paddingTop="10"/>
+	</ui:layout>
+
+	<s:Label text="Nome"/>
+	<s:TextInput width="100%"
+				 id="txtNome"/>
+
+	<s:DropDownList id="comboStatus"
+					height="30"
+					width="100%"
+					prompt="Selecione o Status"
+					dataProvider="{new ArrayCollection(['Inicio', 'Andamento', 'Finalizado'])}"/>
+
+	<s:Panel width="100%"
+			 
+			 height="100%"
+			 title="Descrição">
+		<s:controlBarContent>
+			<ui:RichTextControlBar id="richTextEditor"
+								   editor="{editor}"/>
+		</s:controlBarContent>
+
+		<s:TextArea id="editor"
+					focusEnabled="false"
+					width="100%"
+					height="100%"
+					selectionChange="richTextEditor.editor_selectionChangeHandler(event);"/>
+
+	</s:Panel>
+	<s:Button width="100%"
+			  label="Enviar"
+			  height="30"
+			  click="editarAtividade(event)"/>
+
+</ui:ResizableTitleWindow>

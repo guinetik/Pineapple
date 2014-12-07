@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+			   title="Adicionar Comentário"
+			   close="onClose(event)"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="535"
+			   height="300"
+			   xmlns:ui="com.pineapple.frontend.views.ui.*" xmlns:controllers="com.pineapple.business.controllers.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.ComentarioVO;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.repository.LoginRepository;
+			
+			import flashx.textLayout.conversion.ConversionType;
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			
+			private var _projeto:ProjetoVO;
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+			
+			protected function cadastrarComentario(event:MouseEvent):void
+			{
+				
+				CursorManager.setBusyCursor();
+				
+				var autor:String = LoginRepository.getInstance().loggedUser.nome;
+				var descricao:String = TextConverter.export(editor.textFlow, TextConverter.TEXT_FIELD_HTML_FORMAT, ConversionType.STRING_TYPE).toString();
+				
+				var vo:ComentarioVO = new ComentarioVO();
+				vo.autor = autor;
+				vo.descricao = descricao;
+				vo.idprojeto = this.projeto.id;
+				controller.salvarComentario(vo);
+				
+				
+			}
+			
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+				
+				CursorManager.removeBusyCursor();
+				
+				if(event.result == true)
+				{
+					
+					Alert.show("Comentário Adicionado", "Sucesso");
+					this.dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+					PopUpManager.removePopUp(this);
+					
+				} else 
+				{
+					
+					Alert.show("Erro ao adicionar o comentário", "Erro!");
+					
+				}
+				
+			}
+
+			[Bindable]
+			public function get projeto():ProjetoVO
+			{
+				return _projeto;
+			}
+
+			public function set projeto(value:ProjetoVO):void
+			{
+				_projeto = value;
+			}
+
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorComentarios id="controller" data_return="onDataReturn(event)"/>
+	</fx:Declarations>
+
+	<ui:layout>
+		<s:VerticalLayout paddingBottom="10"
+						  paddingLeft="10"
+						  paddingRight="10"
+						  paddingTop="10"/>
+	</ui:layout>
+
+	<s:Panel width="100%"
+			 
+			 height="100%" title="Comentário">
+		<s:controlBarContent>
+			<ui:RichTextControlBar id="richTextEditor"
+								   editor="{editor}"/>
+		</s:controlBarContent>
+		
+		<s:TextArea id="editor"
+					focusEnabled="false"
+					width="100%"
+					height="100%"
+					selectionChange="richTextEditor.editor_selectionChangeHandler(event);"/>
+		
+	</s:Panel>
+	<s:Button width="100%"
+			  label="Enviar"
+			  height="30"
+			  click="cadastrarComentario(event)"/>
+</ui:ResizableTitleWindow>

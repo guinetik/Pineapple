@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
+  <includeClasses>
+    <classEntry path="com.pineapple.business.AssetManager"/>
+    <classEntry path="com.pineapple.business.model.ProjectTreeDataDescriptor"/>
+    <classEntry path="com.pineapple.business.controllers.ControladorEquipe"/>
+    <classEntry path="com.pineapple.business.repository.EquipeRepository"/>
+    <classEntry path="com.pineapple.business.controllers.ControladorAtividades"/>
+    <classEntry path="com.pineapple.business.controllers.ControladorUsuario"/>
+    <classEntry path="com.pineapple.business.repository.UsuarioRepository"/>
+    <classEntry path="com.pineapple.business.model.ExpertiseVO"/>
+    <classEntry path="com.pineapple.business.controllers.ControladorExpertises"/>
+    <classEntry path="com.pineapple.business.repository.ExpertiseRepository"/>
+    <classEntry path="com.pineapple.business.model.ConviteVO"/>
+    <classEntry path="com.pineapple.business.model.OrientacaoVO"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>

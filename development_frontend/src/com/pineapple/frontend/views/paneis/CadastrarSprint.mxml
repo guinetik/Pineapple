@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*"
+						 xmlns:visualscripts="com.blogspot.visualscripts.*"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 title="Cadastrar Sprint"
+						 close="onClose(event)"
+						 initialize="onInit(event)"
+						 width="600"
+						 height="450"
+						 xmlns:controllers="com.pineapple.business.controllers.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.AtividadeStatus;
+			import com.pineapple.business.model.AtividadeVO;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.model.SprintVO;
+			import com.pineapple.business.model.UserType;
+			import com.pineapple.business.repository.LoginRepository;
+			
+			import flashx.textLayout.conversion.ConversionType;
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+
+			[Bindable]
+			public var projetos:ArrayCollection;
+
+			[Bindable]
+			public var idProjeto:int=-1;
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+				if (LoginRepository.getInstance().loggedUser.entidade == UserType.USER_ALUNO)
+				{
+
+					controller.getProjetos();
+
+				}
+				else
+				{
+
+					controller.getProjetosByProfessor(LoginRepository.getInstance().loggedUser.login);
+
+				}
+				
+				dataInicio.selectedDate = new Date();
+				dataFim.selectedDate = new Date();
+
+
+			}
+
+			protected function cadastrarSprint(event:MouseEvent):void
+			{
+				
+				var dateInicio:String=dataInicio.selectedDate.date + "/" + (Number(dataInicio.selectedDate.month + 1)) + "/" + dataInicio.selectedDate.fullYear;
+				var dateFim:String=dataFim.selectedDate.date + "/" + (Number(dataFim.selectedDate.month + 1)) + "/" + dataFim.selectedDate.fullYear;
+
+				var sprint:SprintVO=new SprintVO();
+				sprint.idprojeto=this.idProjeto;
+				sprint.nome=txtTitulo.text;
+				sprint.descricao=TextConverter.export(editor.textFlow, TextConverter.TEXT_FIELD_HTML_FORMAT, ConversionType.STRING_TYPE).toString();
+				sprint.status=AtividadeStatus.INCIADO;
+				sprint.datainicio = dateInicio;
+				sprint.datafim = dateFim;
+
+				CursorManager.setBusyCursor();
+				
+				controllerOperation.salvarSprint(sprint);
+
+			}
+
+			protected function onSprintDataReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+
+				if (event.result == true)
+				{
+
+					Alert.show("Sprint cadastrada", "Sucesso");
+					txtTitulo.text = "";
+					editor.text = "";
+
+				}
+				else
+				{
+
+					Alert.show("Erro ao adicionar a Sprint", "Erro!");
+
+				}
+
+			}
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				projetos=event.data;
+
+				if (this.idProjeto > 0)
+				{
+
+					getSelectedProject();
+
+				}
+				else
+				{
+
+					comboProjeto.selectedIndex=0;
+
+				}
+
+			}
+
+			private function getSelectedProject():void
+			{
+
+				for (var i:int=0; i < projetos.length; i++)
+				{
+
+					var p:ProjetoVO=projetos.getItemAt(i) as ProjetoVO;
+					if (p.id == idProjeto)
+						comboProjeto.selectedIndex=i;
+
+				}
+
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorProjetos id="controller"
+										 data_return="onDataReturn(event)"/>
+		
+		<controllers:ControladorProjetos id="controllerOperation"
+										 data_return="onSprintDataReturn(event)"/>
+	</fx:Declarations>
+
+	<ui:layout>
+		<s:VerticalLayout paddingBottom="10"
+						  paddingLeft="10"
+						  paddingRight="10"
+						  paddingTop="10"/>
+	</ui:layout>
+
+	<s:DropDownList width="100%"
+					labelField="nome"
+					prompt="Selecione o Projeto"
+					id="comboProjeto"
+					dataProvider="{projetos}"
+					height="30"/>
+
+	<s:Label text="Titulo"
+			 paddingTop="5"/>
+	<s:TextInput width="100%"
+				 id="txtTitulo"/>
+
+	<s:BorderContainer borderVisible="false"
+					   width="100%"
+					   height="35">
+		
+		<s:layout>
+			<s:HorizontalLayout gap="5"
+								verticalAlign="middle"
+								paddingLeft="5"
+								paddingRight="5"
+								paddingBottom="5"
+								paddingTop="5"/>
+		</s:layout>
+		
+		<s:Label text="Data de Início:"
+				 paddingTop="2"/>
+		<visualscripts:SparkDateComponent
+										  height="24"
+										  width="100%"
+										  skinClass="com.blogspot.visualscripts.SparkDateFieldSkin"
+										  id="dataInicio"/>
+		<s:Label text="Data de Entrega:"
+				 paddingTop="2"/>
+		<visualscripts:SparkDateComponent
+										  height="24"
+										  width="100%"
+										  skinClass="com.blogspot.visualscripts.SparkDateFieldSkin"
+										  id="dataFim"/>
+	</s:BorderContainer>
+
+	<s:Panel width="100%"
+			 
+			 height="100%"
+			 title="Descrição">
+		<s:controlBarContent>
+			<ui:RichTextControlBar id="richTextEditor"
+								   editor="{editor}"/>
+		</s:controlBarContent>
+
+		<s:TextArea id="editor"
+					focusEnabled="false"
+					width="100%"
+					height="100%"
+					selectionChange="richTextEditor.editor_selectionChangeHandler(event);"/>
+
+	</s:Panel>
+	<s:Button width="100%"
+			  height="30"
+			  label="Cadastrar" click="cadastrarSprint(event)"/>
+
+</ui:ResizableTitleWindow>

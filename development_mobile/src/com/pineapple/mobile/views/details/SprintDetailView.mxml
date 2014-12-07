@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+		xmlns:components="org.corlan.components.*"
+		xmlns:skins="org.corlan.skins.*"
+		initialize="onInit(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark"
+		title="{this.data.nome}">
+
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.model.AtividadeStatus;
+			import com.pineapple.business.model.SprintVO;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			import spark.events.IndexChangeEvent;
+
+			[Bindable]
+			private var sprintVO:SprintVO;
+
+			protected function onVoltar(event:MouseEvent):void
+			{
+
+				this.navigator.popView();
+
+			}
+			
+			protected function onInit(event:FlexEvent):void
+			{
+				
+				this.sprintVO = this.data as SprintVO;
+				
+			}
+			
+		]]>
+	</fx:Script>
+
+	<s:navigationContent>
+
+		<s:Button label="Voltar"
+				  click="onVoltar(event)"/>
+
+	</s:navigationContent>
+
+	<s:actionContent>
+
+		<s:Button label="Logout"/>
+
+	</s:actionContent>
+
+	<s:TabbedViewNavigator id="tabsNavigator"
+						   width="100%"
+						   height="100%">
+		
+		<s:ViewNavigator width="100%"
+						 height="100%"
+						 label="Resumo"
+						 firstViewData="{this.sprintVO}"
+						 firstView="com.pineapple.mobile.views.details.ResumoDetailView"
+						 title="Resumo"/>
+		
+		<s:ViewNavigator width="100%"
+						 height="100%"
+						 label="Atividades"
+						 firstViewData="{this.sprintVO}"
+						 firstView="com.pineapple.mobile.views.details.ProjectChildrenDetailView"
+						 title="Atividades"/>
+		
+	</s:TabbedViewNavigator>
+
+</s:View>

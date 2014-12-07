@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+		initialize="onInit(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark"
+		title="Visualizar Projeto"
+		xmlns:ui="com.pineapple.mobile.ui.*">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.model.AtividadeStatus;
+			import com.pineapple.business.model.ProjetoVO;
+
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+
+			import spark.events.IndexChangeEvent;
+
+			[Bindable]
+			private var projetoVO:ProjetoVO;
+
+			[Bindable]
+			private var sprints:ArrayCollection;
+
+			protected function onVoltar(event:MouseEvent):void
+			{
+
+				this.navigator.popView();
+
+			}
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				this.projetoVO=this.data as ProjetoVO;
+
+				this.txtNome.setStyle("fontWeight", "bold");
+				this.txtNome.setStyle("textAlign", "center");
+				txtNome.setStyle("fontSize", "32");
+
+
+			}
+		]]>
+	</fx:Script>
+
+	<s:navigationContent>
+
+		<s:Button label="Voltar"
+				  click="onVoltar(event)"/>
+
+	</s:navigationContent>
+
+	<s:actionContent>
+
+		<s:Button label="Logout"/>
+
+	</s:actionContent>
+
+	<s:BorderContainer borderAlpha="0"
+					   width="100%"
+					   height="50"
+					   backgroundColor="#E5F4D0">
+
+		<s:Label id="txtNome"
+				 height="50"
+				 text="{this.projetoVO.nome}"
+				 verticalCenter="1"
+				 verticalAlign="middle"/>
+
+	</s:BorderContainer>
+
+	<s:TabbedViewNavigator id="tabsNavigator"
+						   width="100%"
+						   height="100%">
+
+		<s:ViewNavigator width="100%"
+						 height="100%"
+						 label="Resumo"
+						 firstViewData="{this.projetoVO}"
+						 firstView="com.pineapple.mobile.views.details.ResumoDetailView"
+						 title="Resumo"/>
+
+		<s:ViewNavigator width="100%"
+						 height="100%"
+						 label="Sprints"
+						 firstViewData="{this.projetoVO}"
+						 firstView="com.pineapple.mobile.views.details.ProjectChildrenDetailView"
+						 title="Sprints"/>
+
+		<s:ViewNavigator width="100%"
+						 height="100%"
+						 firstViewData="{this.projetoVO}"
+						 firstView="com.pineapple.mobile.views.details.ProjectComentarioDetailView"
+						 label="Comentários"
+						 title="Comentários"/>
+
+	</s:TabbedViewNavigator>
+
+
+</s:View>

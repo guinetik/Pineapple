@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   initialize="onInit(event)"
+			   close="onClose(event)"
+			   title="Visualizar Equipe"
+			   skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+			   xmlns:controllers="com.pineapple.business.controllers.*"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" width="800" height="550" xmlns:ui="com.pineapple.frontend.views.ui.*">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.EquipeVO;
+			import com.pineapple.business.model.UserVO;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			public var equipe:EquipeVO;
+			
+			[Bindable]
+			private var integrantes:ArrayCollection;
+			[Bindable]
+			private var projetos:ArrayCollection;
+			
+			
+			protected function onInit(event:FlexEvent):void
+			{
+				
+				panelIntegrantes.controlBarVisible=false;
+				
+				txtNome.setStyle("fontWeight", "bold");
+				txtNome.setStyle("fontSize", "18");
+				
+			}
+			
+			public function hideCloseButton():void
+			{
+				
+				this.closeButton.visible=false;
+				this.resizeHandle.visible = false;
+				
+			}
+			
+			public function onChange():void
+			{
+				
+				txtResumo.textFlow=TextConverter.importToFlow(equipe.descricao, TextConverter.TEXT_FIELD_HTML_FORMAT);
+				
+				CursorManager.setBusyCursor();
+				controllerIntegrantes.getMembrosDaEquipe(this.equipe);
+				
+				CursorManager.setBusyCursor();
+				controllerProjetos.getProjetosByEquipe(this.equipe);
+				
+				checarLider();
+
+				
+			}
+			
+			protected function deletarEquipe(event:MouseEvent):void
+			{
+				
+				Alert.show("Tem certeza que deletar a equipe?", "Atenção", Alert.YES|Alert.NO, this.parent as Sprite, onDeletarEquipeAlertClose);
+				
+			}
+			
+			private function onDeletarEquipeAlertClose(e:CloseEvent):void
+			{
+				
+				if(e.detail == Alert.YES)
+				{
+					
+					controllerOperation.removerEquipe(this.equipe);
+					
+				}
+				
+			}
+			
+			protected function onAbrirPerfil(event:MouseEvent):void
+			{
+				
+				abrirPerfil();
+				
+			}
+			
+			protected function promoverLider(event:MouseEvent):void
+			{
+				
+				trace("MinhasEquipes.promoverLider(", this.equipe.id, ")");
+				CursorManager.setBusyCursor();
+				this.equipe.lider=UserVO(listaIntegrantes.selectedItem).nome;
+				this.controllerOperation.delegarLider(this.equipe);
+				
+			}
+			
+			protected function removerDaEquipe(event:MouseEvent):void
+			{
+				
+				Alert.show("Tem certeza que remover esse usuário da equipe?", "Atenção", Alert.YES|Alert.NO, this.parent as Sprite, onRemoverFromEquipeAlertClose);
+				
+			}
+			
+			private function onRemoverFromEquipeAlertClose(e:CloseEvent):void
+			{
+				
+				if(e.detail == Alert.YES)
+				{
+					
+					controllerOperation.removeUsuarioFromEquipe(this.equipe, UserVO(listaIntegrantes.selectedItem).nome);
+					
+				}
+				
+			}
+			
+			protected function onIntegrantesChanged(event:IndexChangeEvent):void
+			{
+				
+				if (!panelIntegrantes.controlBarVisible)
+				{
+					
+					abrirPerfil();
+					
+				}
+				
+				btPromover.enabled = listaIntegrantes.selectedItem.nome == LoginRepository.getInstance().loggedUser.nome ? false : true;
+				btRemover.enabled = listaIntegrantes.selectedItem.nome == LoginRepository.getInstance().loggedUser.nome ? false : true;
+				
+			}
+			
+			private function abrirPerfil():void
+			{
+				
+				var menuController:MenuController = new MenuController();
+				menuController.root = this.root;
+				menuController.abrirPerfil(UserVO(listaIntegrantes.selectedItem).nome);
+				
+			}
+			
+			protected function onProjectChange(event:IndexChangeEvent):void
+			{
+				
+				var menuController:MenuController = new MenuController();
+				menuController.root = this.root;
+				menuController.visualizarProjeto(projectList.selectedItem);
+				
+			}
+			
+			protected function onReturnIntegrantes(event:DataReturnEvent):void
+			{
+				
+				CursorManager.removeBusyCursor();
+				this.integrantes=event.data;
+				
+			}
+			
+			protected function onReturnProjetos(event:DataReturnEvent):void
+			{
+				
+				CursorManager.removeBusyCursor();
+				this.projetos=event.data;
+				
+			}
+			
+			public function checarLider():void
+			{
+				
+				if (this.equipe.lider == LoginRepository.getInstance().loggedUser.nome)
+				{
+					
+					panelIntegrantes.controlBarVisible=true;
+					btDeletarEquipe.visible=btDeletarEquipe.includeInLayout=true;
+					
+				}
+				else
+				{
+					panelIntegrantes.controlBarVisible=false;
+					btDeletarEquipe.visible=btDeletarEquipe.includeInLayout=false;
+				}
+				
+			}
+			
+			protected function onOperationReturn(event:DataReturnEvent):void
+			{
+				
+				trace(event.result);
+				
+				if (event.result)
+				{
+					
+					Alert.show("Operação realizada com sucesso", "Sucesso");
+					
+				}
+				else
+				{
+					
+					Alert.show("Houve um erro ao processar a operação", "Erro");
+					
+				}
+				
+				CursorManager.removeBusyCursor();
+				
+				checarLider();
+				
+			}
+			
+			public function getEquipeById(id_equipe:int):void
+			{
+				
+				CursorManager.setBusyCursor();
+				controllerEquipe.getEquipeById(id_equipe);
+				
+			}
+			
+			protected function onReturnEquipes(event:DataReturnEvent):void
+			{
+				
+				CursorManager.removeBusyCursor();
+				this.equipe = event.result as EquipeVO;
+				onChange();
+				
+			}
+			
+			protected function onClose(event:CloseEvent):void
+			{
+				
+				PopUpManager.removePopUp(this);
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		
+		<controllers:ControladorEquipe id="controllerEquipe"
+									   data_return="onReturnEquipes(event)"/>
+		
+		<controllers:ControladorEquipe id="controllerIntegrantes"
+									   data_return="onReturnIntegrantes(event)"/>
+		
+		<controllers:ControladorProjetos id="controllerProjetos"
+										 data_return="onReturnProjetos(event)"/>
+		
+		<controllers:ControladorEquipe id="controllerOperation"
+									   data_return="onOperationReturn(event)"/>
+		
+	</fx:Declarations>
+	
+	<ui:layout>
+		<s:VerticalLayout paddingBottom="5"
+						  paddingLeft="5"
+						  paddingTop="5"
+						  paddingRight="5"/>
+	</ui:layout>
+	
+	<s:VGroup width="100%"
+			  height="30%">
+		
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label id="txtNome"
+					 width="100%"
+					 text="{equipe.nome}"
+					 paddingTop="10"/>
+			<s:Button id="btDeletarEquipe"
+					  label="Deletar Equipe"
+					  visible="false"
+					  includeInLayout="false"
+					  click="deletarEquipe(event)"/>
+		</s:HGroup>
+		<s:TextArea width="100%"
+					id="txtResumo"
+					height="100%"/>
+		
+	</s:VGroup>
+	
+	<s:HGroup width="100%"
+			  height="100%">
+		<s:Panel width="50%"
+				 
+				 height="100%"
+				 id="panelIntegrantes"
+				 title="Integrantes">
+			
+			<s:controlBarContent>
+				<s:Button label="Abrir Perfil"
+						  id="btPerfil"
+						  enabled="{this.listaIntegrantes.selectedItem != null}"
+						  height="30"
+						  click="onAbrirPerfil(event)"/>
+				<s:Button label="Promover a lider"
+						  enabled="false"
+						  height="30"
+						  id="btPromover"
+						  click="promoverLider(event)"/>
+				<s:Button label="Remover"
+						  enabled="false"
+						  height="30"
+						  id="btRemover"
+						  click="removerDaEquipe(event)"/>
+			</s:controlBarContent>
+			
+			<s:List width="100%"
+					height="100%"
+					borderVisible="false"
+					labelField="nome"
+					id="listaIntegrantes"
+					itemRenderer="com.pineapple.frontend.views.renderers.AlunoItemRenderer"
+					change="onIntegrantesChanged(event)"
+					dataProvider="{integrantes}"/>
+		</s:Panel>
+		<s:Panel width="50%"
+				 height="100%"
+				 
+				 title="Projetos">
+			<s:List width="100%"
+					height="100%"
+					borderVisible="false"
+					labelField="nome"
+					itemRenderer="com.pineapple.frontend.views.renderers.GenericItemRenderer"
+					id="projectList"
+					change="onProjectChange(event)"
+					dataProvider="{this.projetos}"/>
+		</s:Panel>
+	</s:HGroup>
+	
+	
+</ui:ResizableTitleWindow>

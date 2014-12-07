@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 title="Pineapple Ideas"
+		 addedToStage="onInit(event)"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="305"
+		 height="180">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.controllers.ControladorLogin;
+			import com.pineapple.business.events.AccessEvent;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.events.ValidationResultEvent;
+			import mx.managers.CursorManager;
+
+			
+			protected function submitForm(event:MouseEvent):void
+			{
+				
+				if (vLogin.validate().type == ValidationResultEvent.VALID)
+				{
+					
+					CursorManager.setBusyCursor();
+					
+					var controller:ControladorLogin = new ControladorLogin();
+					
+					controller.addEventListener(AccessEvent.ACCESS_GRANTED, onAccessGranted);
+					controller.addEventListener(AccessEvent.ACCESS_DENIED, onAccesDenied);
+					controller.logarUsuario(txtLogin.text, txtPassword.text);
+					
+				}
+				
+			}
+			
+			protected function onAccessGranted(event:AccessEvent):void
+			{
+				
+				trace("LoginBox.onAccessGranted(event)");
+				
+				txtLogin.text = "";
+				txtPassword.text = "";
+				
+				this.dispatchEvent(new AccessEvent(AccessEvent.ACCESS_GRANTED));
+				this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+				
+			}
+			
+			protected function onAccesDenied(event:Event):void
+			{
+				
+				
+				CursorManager.removeBusyCursor();
+				Alert.show("Usuário/Senha inválidos. Tente Novamente", "Erro");
+				
+			}
+			
+			protected function onInit(event:Event):void
+			{
+				
+				this.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+				
+			}
+			
+			protected function onKeyDown(event:KeyboardEvent):void
+			{
+				
+				if(event.keyCode == Keyboard.ENTER)
+				{
+					
+					submitForm(null);
+					
+				}
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Metadata>
+		//[Event(name="acess_granted", type="br.med.atestados.events.AccessEvent")]
+	</fx:Metadata>
+	
+	<fx:Declarations>
+		<mx:StringValidator source="{txtLogin}" property="text" required="true" minLength="3"
+							maxLength="20" id="vLogin"/>
+		
+		<mx:StringValidator source="{txtPassword}" property="text" required="true" minLength="3"
+							maxLength="20" id="vSenha"/>
+	</fx:Declarations>
+
+	<s:Form width="100%"
+			height="100%">
+
+		<s:layout>
+			<s:VerticalLayout gap="0"
+							  paddingLeft="0"
+							  paddingRight="0"/>
+		</s:layout>
+
+		<s:FormItem label="Login" showErrorTip="true"
+					width="100%">
+			<s:TextInput width="100%" text="aluno"
+						 id="txtLogin"/>
+		</s:FormItem>
+
+		<s:FormItem label="Senha"
+					width="100%">
+			<s:TextInput displayAsPassword="true" text="aluno" id="txtPassword"
+						 width="100%"/>
+		</s:FormItem>
+
+		<s:Group width="100%">
+			<s:layout>
+				<s:VerticalLayout horizontalAlign="right" paddingRight="40"/>
+			</s:layout>
+			
+			<s:Button height="30" label="Enviar" click="submitForm(event)"
+					  id="btSubmit"/>
+			
+		</s:Group>
+
+	</s:Form>
+	
+	<mx:LinkButton label="Esqueci meus dados" left="20" bottom="10" id="btEsqueci" visible="false"/>
+
+</s:Panel>

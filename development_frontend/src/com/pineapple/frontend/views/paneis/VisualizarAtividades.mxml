@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 title="Detalhes da Atividade"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 close="onClose(event)"
+						 initialize="onInit(event)"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 width="100%"
+						 height="100%"
+						 xmlns:controllers="com.pineapple.business.controllers.*"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.AtividadeVO;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			import com.pineapple.frontend.views.ui.UIEvent;
+			
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+
+			[Bindable]
+			public var atividade:AtividadeVO;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				txtNome.setStyle("fontWeight", "bold");
+				txtNome.setStyle("fontSize", "18");
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			public function init():void
+			{
+
+				txtResumo.textFlow=TextConverter.importToFlow(atividade.descricao, TextConverter.TEXT_FIELD_HTML_FORMAT);
+
+			}
+
+			public function hideCloseButton():void
+			{
+
+				this.closeButton.visible=false;
+				this.resizeHandle.visible=false;
+
+			}
+
+			protected function editarAtividade(event:MouseEvent):void
+			{
+
+				var menuController:MenuController = new MenuController();
+				menuController.root = this.root;
+				var p:EditarAtividade = menuController.openEditarAtividade() as EditarAtividade;
+				p.addEventListener(CloseEvent.CLOSE, onPanelClose);
+				p.atividade=this.atividade;
+				p.init();
+
+			}
+
+			protected function onPanelClose(event:CloseEvent):void
+			{
+
+				this.dispatchEvent(new UIEvent(UIEvent.REFRESH_UI));
+
+			}
+
+			protected function excluirAtividade(event:MouseEvent):void
+			{
+
+				Alert.show("Deseja deletar essa atividade?", "Confirmação", Alert.YES | Alert.NO, this, onAlertClose);
+
+			}
+
+			private function onAlertClose(e:CloseEvent):void
+			{
+
+				if (e.detail == Alert.YES)
+				{
+
+					controller.excluirAtividade(this.atividade);
+
+				}
+
+			}
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				if (event.result == true)
+				{
+
+					Alert.show("Atividade excluida com sucesso", "Sucesso");
+					this.dispatchEvent(new UIEvent(UIEvent.REFRESH_UI));
+
+				}
+				else
+				{
+
+					Alert.show("Erro ao excluir a atividade", "Erro");
+
+				}
+
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorAtividades id="controller"
+										   data_return="onDataReturn(event)"/>
+	</fx:Declarations>
+
+	<fx:Metadata>
+		[Event(name="refresh_ui", type="com.pineapple.frontend.views.ui.UIEvent")]
+	</fx:Metadata>
+
+	<ui:layout>
+		<s:VerticalLayout paddingLeft="5"
+						  paddingBottom="5"
+						  paddingTop="5"
+						  paddingRight="5"/>
+	</ui:layout>
+
+	<s:Label id="txtNome"
+			 text="{atividade.nome}"
+			 paddingLeft="5"
+			 paddingTop="10"
+			 paddingBottom="10"/>
+
+	<s:BorderContainer borderVisible="false"
+					   width="100%"
+					   height="40">
+
+		<s:Label text="Status: {atividade.status}"
+				 top="15"
+				 left="5"/>
+
+		<s:Group right="10"
+				 top="0">
+			<s:layout>
+				<s:HorizontalLayout gap="5"
+									paddingLeft="5"
+									paddingTop="5"/>
+			</s:layout>
+
+			<s:Button label="Editar Atividade"
+					  click="editarAtividade(event)"
+					  height="30"/>
+			<s:Button label="Excluir Atividade"
+					  click="excluirAtividade(event)"
+					  height="30"/>
+
+		</s:Group>
+
+	</s:BorderContainer>
+
+	<s:TextArea id="txtResumo"
+				width="100%"
+				editable="false"
+				height="100%"/>
+
+</ui:ResizableTitleWindow>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Module xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark"
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  width="100%"
+		  height="100%"
+		  xmlns:views="com.pineapple.frontend.views.*"
+		  xmlns:controllers="com.pineapple.frontend.controllers.*"
+		  xmlns:professor="com.pineapple.frontend.views.perspectives.professor.*" xmlns:ui="com.pineapple.frontend.views.ui.*">
+	<s:layout>
+		<s:VerticalLayout gap="0"/>
+	</s:layout>
+
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.HeaderMenuEvent;
+			import com.pineapple.frontend.views.ui.UIEvent;
+
+			protected function onMenuSelected(event:HeaderMenuEvent):void
+			{
+
+				controller.resolveIntent(event.intentAction);
+
+			}
+			
+			protected function onAddToStage(event:Event):void
+			{
+				controller.root = this;
+				controller.factory = this.moduleFactory;
+			}
+			
+			protected function onRefreshUI(event:UIEvent):void
+			{
+				
+				home.getProjetos();
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+
+		<controllers:MenuController id="controller" refresh_ui="onRefreshUI(event)"/>
+
+	</fx:Declarations>
+
+	<ui:Header width="100%"
+			   	refresh_ui="onRefreshUI(event)"
+				  menu_selected="onMenuSelected(event)"/>
+
+	<professor:Home width="100%" addedToStage="onAddToStage(event)" id="home"
+					height="100%"/>
+
+</s:Module>

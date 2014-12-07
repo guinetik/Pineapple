@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		initialize="onInit(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.model.GenericObject;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.model.SprintVO;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			private var vo:GenericObject;
+			
+			[Bindable]
+			private var collection:ArrayCollection;
+			
+			protected function onInit(event:FlexEvent):void
+			{
+				
+				this.vo = this.data as GenericObject;
+				this.collection = this.vo.children;
+				
+			}
+			
+			protected function onChange(event:IndexChangeEvent):void
+			{
+				
+				var item:Object=this.vo.children[event.newIndex];
+				
+				if(this.vo is SprintVO)
+				{
+					
+					this.navigator.pushView(ResumoDetailView, item);
+					
+				} else if(this.vo is ProjetoVO)
+				{
+					
+					PineappleMobile.getInstance().navigateToView(SprintDetailView, item);
+					
+				}
+				
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Scroller width="100%"
+				height="100%">
+		
+		<s:viewport>			
+			
+			<s:VGroup width="100%"
+					  height="100%"
+					  paddingTop="5"
+					  paddingLeft="5"
+					  paddingRight="5"
+					  gap="20">
+
+				<s:List id="list"
+						width="100%"
+						labelField="nome"
+						itemRenderer="com.pineapple.mobile.ui.ProjectListItemRenderer"
+						dataProvider="{collection}"
+						verticalScrollPolicy="auto"
+						change="onChange(event)">
+					
+					<s:layout>
+						<s:VerticalLayout useVirtualLayout="false"
+										  gap="0"
+										  requestedRowCount="-1"/>
+					</s:layout>
+					
+				</s:List>
+				
+			</s:VGroup>
+			
+		</s:viewport>
+		
+	</s:Scroller>
+	
+</s:View>

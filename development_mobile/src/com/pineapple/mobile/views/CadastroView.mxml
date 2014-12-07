@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+		initialize="onInit(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark"
+		title="Editar Cadastro">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.controllers.ControladorLogin;
+			import com.pineapple.business.controllers.PhotoUploadController;
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.UserVO;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.mobile.components.MessageBox;
+			
+			import flash.utils.setTimeout;
+			
+			import flexInc.ane.mobile.toast.Toast;
+			
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			import mx.graphics.ImageSnapshot;
+			import mx.graphics.codec.JPEGEncoder;
+			
+			import spark.components.ViewMenu;
+
+			[Bindable] private var user:UserVO;
+			private var file:File;
+			private var scaledIcon:Bitmap;
+			private var uploadController:PhotoUploadController;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				user												= LoginRepository.getInstance().loggedUser;
+
+			}
+			
+			private var dataSource:IDataInput;
+			private var eventSource:IEventDispatcher;
+
+			protected function imageCaptured(event:MediaEvent):void
+			{
+				
+				trace("CadastroView.imageCaptured(event)");
+
+				var imagePromise:MediaPromise 						= event.data;
+				dataSource 											= imagePromise.open();
+				
+				if( imagePromise.isAsync )
+				{
+					trace( "Asynchronous media promise." );
+					eventSource 									= dataSource as IEventDispatcher;
+					trace( eventSource );
+					
+					eventSource.addEventListener( Event.COMPLETE, onDataComplete );                
+				}
+				else
+				{
+					
+					trace( "Synchronous media promise." );
+					readMediaData();
+					
+				}	
+
+				txtEditarFoto.includeInLayout						= true;
+				txtEditarFoto.visible								= true;
+				
+			}
+			
+			private function readMediaData():void
+			{
+				
+				trace("CadastroView.readMediaData()");
+				
+				var imageBytes:ByteArray 							= new ByteArray();
+				var loader:Loader 									= new Loader();
+				dataSource.readBytes( imageBytes );
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onCompleteThumb);
+				loader.loadBytes(imageBytes);
+			}
+			
+			protected function onCompleteThumb(event:Event):void
+			{
+				
+				trace("CadastroView.onCompleteThumb(event)");
+				
+				var bitmap:Bitmap 									= event.target.content;
+				uploadController									= new PhotoUploadController();
+				uploadController.addEventListener(Event.RESIZE, onCompleteThumbResize);
+				uploadController.prepareThumbnail(bitmap);
+				
+			}
+			
+			protected function onCompleteThumbResize(event:Event):void
+			{
+				
+				scaledIcon											= uploadController.resultBitmap;
+				scaledIcon.smoothing								= true;
+				userIcon.source										= scaledIcon;
+				
+			}			
+
+			protected function captureCanceled(event:Event):void
+			{
+
+				trace("CadastroView.captureCanceled(event)");
+
+			}
+
+			protected function cameraError(event:ErrorEvent):void
+			{
+				trace("CadastroView.cameraError(event)");
+
+			}
+
+			protected function pickFromAlbum(event:MouseEvent):void
+			{
+
+				if (CameraRoll.supportsBrowseForImage)
+				{
+					trace("camera roll is supported");
+					var roll:CameraRoll=new CameraRoll();
+					roll.browseForImage();
+					roll.addEventListener(MediaEvent.SELECT, imageCaptured);
+				}
+				else
+				{
+
+					trace("camera roll not supported");
+
+				}
+
+			}
+
+			protected function useCameraUI(event:MouseEvent):void
+			{
+
+				var deviceCameraApp:CameraUI=new CameraUI();
+
+				if (CameraUI.isSupported)
+				{
+
+					deviceCameraApp.addEventListener(MediaEvent.COMPLETE, imageCaptured);
+					deviceCameraApp.addEventListener(Event.CANCEL, captureCanceled);
+					deviceCameraApp.addEventListener(ErrorEvent.ERROR, cameraError);
+					deviceCameraApp.launch(MediaType.IMAGE);
+
+				}
+
+			}
+
+			protected function editarUsuario(event:MouseEvent):void
+			{
+
+				if (txtEditarFoto.visible)
+				{
+					
+					
+					uploadController.addEventListener(Event.COMPLETE, uploadCompleteHandler);
+					uploadController.uploadForMobile();
+
+				}
+				else
+				{
+
+					enviarDados();
+
+				}
+				
+				busy.visible = busy.includeInLayout = true;
+
+			}
+
+			protected function uploadCompleteHandler(event:Event):void
+			{
+				
+				trace("CadastroView.uploadCompleteHandler(event)");
+				enviarDados();
+
+			}
+
+			protected function openUploadHandler(event:Event):void
+			{
+
+				trace("CadastroView.openUploadHandler(event)");
+
+			}
+
+			protected function onEditComplete(event:DataReturnEvent):void
+			{
+				
+				var msgBox:MessageBox;
+
+				var toast:Toast = new Toast();
+				toast.setPosition(Toast.POSITION_BOTTOM);
+				
+				if (event.result == true)
+				{
+					
+					toast.show("Usuário Editado com sucesso", Toast.LENGTH_SHORT);
+
+				}
+				else
+				{
+
+					toast.show("Erro ao editar o usuário.", Toast.LENGTH_SHORT);
+
+				}
+				
+				busy.visible = busy.includeInLayout = false;
+
+			}
+
+			private function enviarDados():void
+			{
+				
+
+				var user:UserVO						= LoginRepository.getInstance().loggedUser;
+				var nomeUsuario:String 				= user.nome;
+				user.mensagem						= txtMensagem.text;
+				
+				if (uploadController != null)
+					user.imagem="http://projects.guinetik.com/public/pineapple_backend/uploads/" + uploadController.filename;
+
+				var controller:ControladorLogin=new ControladorLogin();
+				controller.addEventListener(DataReturnEvent.DATA_RETURN, onEditComplete);
+				controller.editarUsuario(user, nomeUsuario);
+
+			}
+			
+			private function onDataComplete(data:Object):void
+			{
+				
+				trace("Data load complete");
+				readMediaData();
+				
+			}
+			
+			public static function stripHtmlTags(html:String, tags:String = ""):String
+			{
+				var tagsToBeKept:Array = new Array();
+				if (tags.length > 0)
+					tagsToBeKept = tags.split(new RegExp("\\s*,\\s*"));
+				
+				var tagsToKeep:Array = new Array();
+				for (var i:int = 0; i < tagsToBeKept.length; i++)
+				{
+					if (tagsToBeKept[i] != null && tagsToBeKept[i] != "")
+						tagsToKeep.push(tagsToBeKept[i]);
+				}
+				
+				var toBeRemoved:Array = new Array();
+				var tagRegExp:RegExp = new RegExp("<([^>\\s]+)(\\s[^>]+)*>", "g");
+				
+				var foundedStrings:Array = html.match(tagRegExp);
+				for (i = 0; i < foundedStrings.length; i++) 
+				{
+					var tagFlag:Boolean = false;
+					if (tagsToKeep != null) 
+					{
+						for (var j:int = 0; j < tagsToKeep.length; j++)
+						{
+							var tmpRegExp:RegExp = new RegExp("<\/?" + tagsToKeep[j] + "( [^<>]*)*>", "i");
+							var tmpStr:String = foundedStrings[i] as String;
+							if (tmpStr.search(tmpRegExp) != -1) 
+								tagFlag = true;
+						}
+					}
+					if (!tagFlag)
+						toBeRemoved.push(foundedStrings[i]);
+				}
+				for (i = 0; i < toBeRemoved.length; i++) 
+				{
+					var tmpRE:RegExp = new RegExp("([\+\*\$\/])","g");
+					var tmpRemRE:RegExp = new RegExp((toBeRemoved[i] as String).replace(tmpRE, "\\$1"),"g");
+					html = html.replace(tmpRemRE, "");
+				} 
+				return html;
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:actionContent>
+		
+		<s:BusyIndicator id="busy" visible="false" includeInLayout="false" symbolColor="#FFFFFF"/>
+		
+	</s:actionContent>
+
+	<s:Group width="100%"
+			 height="100%">
+
+		<s:layout>
+			<s:VerticalLayout paddingBottom="5"
+							  paddingLeft="5"
+							  paddingRight="5"
+							  paddingTop="5"/>
+		</s:layout>
+
+		<s:Label text="Mensagem"/>
+		<s:TextArea id="txtMensagem"
+					width="100%"
+					height="200"
+					text="{stripHtmlTags(user.mensagem)}"/>
+
+		<s:Label text="Trocar Imagem"/>
+
+		<s:HGroup width="100%"
+				  verticalAlign="middle">
+			<s:Image width="200"
+					 height="200"
+					 smooth="true"
+					 id="userIcon"
+					 source="{user.imagem}"/>
+			<s:VGroup width="100%">
+				<s:Button label="Foto da Galeria"
+						  click="pickFromAlbum(event)"
+						  width="100%"/>
+				<s:Button label="Tirar com a Câmera"
+						  click="useCameraUI(event)"
+						  width="100%"/>
+			</s:VGroup>
+
+		</s:HGroup>
+
+		<s:Label id="txtEditarFoto"
+				 text="Toque em 'Editar' para enviar a sua imagem"
+				 visible="false"
+				 includeInLayout="false"/>
+
+
+		<s:Button width="100%"
+				  click="editarUsuario(event)"
+				  label="Editar"/>
+
+	</s:Group>
+
+</s:View>

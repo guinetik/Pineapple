@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/mx" initialize="onInit(event)"
+		title="Login" xmlns:controllers="com.pineapple.mobile.controllers.*" xmlns:controllers1="com.pineapple.business.controllers.*">
+
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.AccessEvent;
+			import com.pineapple.business.model.UserType;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.mobile.components.MessageBox;
+			
+			import flexInc.ane.mobile.toast.Toast;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ValidationResultEvent;
+			
+			import spark.components.ViewNavigator;
+			import spark.components.ViewNavigatorApplication;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+
+
+			}
+
+			protected function submitForm(event:MouseEvent):void
+			{
+
+				if (vLogin.validate().type == ValidationResultEvent.VALID)
+				{
+
+					trace("LoginView.submitForm(if)");
+					controller.logarUsuario(txtLogin.text, txtPassword.text);
+
+				}
+				else
+				{
+
+					var toast:Toast = new Toast();
+					toast.setPosition(Toast.POSITION_CENTER);
+					toast.show("Erro ao processar o login. Verifique os dados", Toast.LENGTH_SHORT);
+
+				}
+
+			}
+
+			protected function onAccessGranted(event:AccessEvent):void
+			{
+
+				trace("LoginView.onAccessGranted(event)");
+				
+				switch(LoginRepository.getInstance().loggedUser.entidade)
+				{
+					case UserType.USER_ALUNO:
+					{
+						
+						trace("ControladorLogin.resolveNextStep(USER_ALUNO)");
+						
+											PineappleMobile.getInstance().popView();
+											PineappleMobile.getInstance().navigateToView(AlunoView);
+						
+						break;
+						
+					}
+						
+					case UserType.USER_PROFESSOR:
+					{
+						
+						trace("ControladorLogin.resolveNextStep(USER_PROFESSOR)");
+						
+											PineappleMobile.getInstance().popView();
+											PineappleMobile.getInstance().navigateToView(ProfessorView);
+						
+						break;
+						
+					}
+						
+					default:
+					{
+						break;
+					}
+				}
+				
+
+			}
+
+			protected function onAccessDenied(event:AccessEvent):void
+			{
+
+				var toast:Toast = new Toast();
+				toast.setPosition(Toast.POSITION_BOTTOM);
+				toast.show("Erro ao processar o login. Verifique os dados", Toast.LENGTH_SHORT);
+
+			}
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+
+		<controllers1:ControladorLogin id="controller" access_granted="onAccessGranted(event)" access_denied="onAccessDenied(event)"/>
+
+		<mx:StringValidator source="{txtLogin}" property="text" required="true" minLength="3"
+							maxLength="20" id="vLogin"/>
+		
+		<mx:StringValidator source="{txtPassword}" property="text" required="true" minLength="3"
+							maxLength="20" id="vSenha"/>
+
+	</fx:Declarations>
+
+	<s:Group width="100%" height="100%">
+
+		<s:layout>
+
+			<s:VerticalLayout verticalAlign="middle" horizontalAlign="center"/>
+
+		</s:layout>
+
+		<s:Image source="@Embed(source='assets/logo.png')" smooth="true"/>
+
+		<s:Form width="100%">
+			
+			<s:layout>
+				
+				<s:VerticalLayout gap="0" paddingLeft="0" paddingRight="0"/>
+				
+			</s:layout>
+			
+			<s:FormItem label="Login" showErrorTip="true" width="100%">
+				
+				<s:TextInput id="txtLogin" text="aluno" tabIndex="0" softKeyboardType="default" width="100%"/>
+				
+			</s:FormItem>
+			
+			<s:FormItem label="Senha" width="100%">
+				
+				<s:TextInput tabIndex="1" text="aluno" displayAsPassword="true" id="txtPassword" width="100%"/>
+				
+			</s:FormItem>
+			
+			<s:Group width="100%">
+				
+				<s:layout>
+					
+					<s:VerticalLayout paddingLeft="100"/>
+					
+				</s:layout>
+				
+				<s:ToggleSwitch id="cbRemember" label="Lembrar de Mim"/>
+				
+				<s:Group width="100%">
+					
+					<s:layout>
+						
+						<s:VerticalLayout paddingRight="40" horizontalAlign="right"/>
+						
+					</s:layout>
+					
+					<s:Button label="Enviar" click="submitForm(event)" id="btSubmit"/>
+					
+				</s:Group>
+				
+			</s:Group>
+			
+		</s:Form>
+
+	</s:Group>
+
+</s:View>

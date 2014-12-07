@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				height="50"
+				width="100%"
+				initialize="onInit(event)"
+				autoDrawBackground="true" xmlns:controllers="com.pineapple.business.controllers.*">
+
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.EquipeVO;
+			import com.pineapple.business.model.OrientacaoVO;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.frontend.controllers.MenuController;
+			import com.pineapple.frontend.views.ui.UIEvent;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+
+			protected function abrirProjeto(event:MouseEvent):void
+			{
+				var menuController:MenuController=new MenuController();
+				menuController.root=this.root;
+				var projeto:ProjetoVO=new ProjetoVO();
+				projeto.id=OrientacaoVO(this.data).id_projeto;
+				menuController.visualizarIdeia(projeto);
+
+			}
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				btEquipe.setStyle("fontWeight", "bold");
+				btProjeto.setStyle("fontWeight", "bold");
+
+			}
+
+			protected function abrirProfessor(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+
+			}
+			
+			protected function reenviarSolicitacao(event:MouseEvent):void
+			{
+				
+				controllerProjeto.reenviarSolicitacao(OrientacaoVO(this.data));
+				CursorManager.setBusyCursor();
+				
+			}
+			
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+				
+				CursorManager.removeBusyCursor();
+				if(event.result == true)
+				{
+					
+					Alert.show("Operação realizada com sucesso", "Sucesso");
+					this.dispatchEvent(new UIEvent(UIEvent.REFRESH_UI, true, true));
+					
+				} else 
+				{
+					
+					Alert.show("Houve um erro ao realizar a operação", "Erro");
+					
+				}
+				
+			}
+			
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<controllers:ControladorProjetos id="controllerProjeto" data_return="onDataReturn(event)"/>
+	</fx:Declarations>
+
+	<fx:Metadata>
+		[Event(name="refresh_ui", type="com.pineapple.frontend.views.ui.UIEvent")]
+	</fx:Metadata>
+
+	<s:Group width="100%"
+			 height="100%">
+
+		<s:VGroup width="100%"
+				  height="100%"
+				  top="5"
+				  gap="0">
+
+			<s:HGroup width="100%"
+					  height="100%"
+					  gap="0">
+				<mx:LinkButton label="{data.nomeprofessor}"
+							   click="abrirProfessor(event)"
+							   paddingTop="3"
+							   id="btEquipe"/>
+				<s:Label text="solicitou mudanças"
+						 paddingTop="8"/>
+			</s:HGroup>
+			<s:HGroup width="100%">
+				<s:Label text="no resumo do projeto"
+						 paddingLeft="12"/>
+				<mx:LinkButton label="{data.projeto}"
+							   paddingLeft="-5"
+							   paddingTop="-12"
+							   click="abrirProjeto(event)"
+							   id="btProjeto"/>
+			</s:HGroup>
+
+		</s:VGroup>
+
+		<s:Button label="Reenviar Solicitação"
+				  height="30"
+				  right="5" top="10" click="reenviarSolicitacao(event)"/>
+
+	</s:Group>
+
+</s:ItemRenderer>

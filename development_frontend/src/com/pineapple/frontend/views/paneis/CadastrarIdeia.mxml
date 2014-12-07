@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 title="Cadastrar Ideia"
+						 close="onClose(event)"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 width="600"
+						 height="400"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*"
+						 xmlns:controllers="com.pineapple.business.controllers.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.repository.LoginRepository;
+			
+			import flash.text.engine.FontPosture;
+			import flash.text.engine.FontWeight;
+			
+			import flashx.textLayout.conversion.ConversionType;
+			import flashx.textLayout.conversion.TextConverter;
+			import flashx.textLayout.formats.TextAlign;
+			import flashx.textLayout.formats.TextDecoration;
+			import flashx.textLayout.formats.TextLayoutFormat;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.ColorPickerEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+
+
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			protected function cadastrarIdeia(event:MouseEvent):void
+			{
+
+				var nome:String=txtTitulo.text;
+				var autor:String=LoginRepository.getInstance().loggedUser.nome;
+				var descricao:String=TextConverter.export(editor.textFlow, TextConverter.TEXT_FIELD_HTML_FORMAT, ConversionType.STRING_TYPE).toString();
+
+				var vo:ProjetoVO=new ProjetoVO();
+				vo.nome=nome;
+				vo.autor=autor;
+				vo.descricao=descricao;
+
+				controller.cadastrarProjeto(vo);
+
+			}
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				if (event.result == true)
+				{
+
+					Alert.show("Ideia Adicionada", "Sucesso");
+					PopUpManager.removePopUp(this);
+					this.dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+
+				}
+				else
+				{
+
+					Alert.show("Erro ao adicionar a Ideia", "Erro!");
+
+				}
+
+			}
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<controllers:ControladorProjetos id="controller"
+										 data_return="onDataReturn(event)"/>
+	</fx:Declarations>
+
+	<ui:layout>
+		<s:VerticalLayout paddingBottom="10"
+						  paddingLeft="10"
+						  paddingRight="10"
+						  paddingTop="10"/>
+	</ui:layout>
+
+	<s:Label text="Nome do Projeto"/>
+	<s:TextInput width="100%"
+				 id="txtTitulo"/>
+	<s:Panel width="100%"
+			 
+			 height="100%" title="Descrição">
+		<s:controlBarContent>
+			<ui:RichTextControlBar id="richTextEditor"
+								   editor="{editor}"/>
+		</s:controlBarContent>
+		
+		<s:TextArea id="editor"
+					focusEnabled="false"
+					width="100%"
+					height="100%"
+					selectionChange="richTextEditor.editor_selectionChangeHandler(event);"/>
+		
+	</s:Panel>
+	<s:Button width="100%"
+			  label="Enviar"
+			  click="cadastrarIdeia(event)"
+			  height="30"/>
+
+</ui:ResizableTitleWindow>

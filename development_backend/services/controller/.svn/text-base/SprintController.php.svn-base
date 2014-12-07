@@ -1,0 +1,22 @@
+<?php
+	
+	require_once '../dao/SprintDAO.php';
+	
+	class SprintController
+	{
+		
+		
+		public function getSprints()
+		{
+			
+			$dao = new SprintDAO();
+			$sprints = $dao->getSprints();
+			
+			return json_encode($sprints);
+			
+		}
+		
+		
+	}
+
+?>

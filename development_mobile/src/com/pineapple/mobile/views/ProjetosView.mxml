@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View backKeyPressed="onBackPressed(event)"
+		xmlns:fx="http://ns.adobe.com/mxml/2009"
+		initialize="onInit(event)"
+		xmlns:components="org.corlan.components.*"
+		xmlns:skins="org.corlan.skins.*"
+		xmlns:s="library://ns.adobe.com/flex/spark"
+		xmlns:mx="library://ns.adobe.com/flex/mx"
+		xmlns:controllers="com.pineapple.mobile.controllers.*"
+		xmlns:controllers1="com.pineapple.business.controllers.*"
+		xmlns:sparkTree="com.sparkTree.*">
+
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.AssetManager;
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.AtividadeVO;
+			import com.pineapple.business.model.ProjectTreeDataDescriptor;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.model.SprintVO;
+			import com.pineapple.mobile.ui.ProjectListItemRenderer;
+			import com.pineapple.mobile.views.details.ProjectDetailView;
+			import com.pineapple.mobile.views.details.ResumoDetailView;
+			import com.pineapple.mobile.views.details.SprintDetailView;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import mx.events.FlexEvent;
+			import mx.events.PropertyChangeEvent;
+			
+			import spark.components.DataGroup;
+			import spark.components.List;
+			import spark.components.supportClasses.ItemRenderer;
+			import spark.events.IndexChangeEvent;
+			import spark.transitions.CrossFadeViewTransition;
+			import spark.transitions.FlipViewTransition;
+			import spark.transitions.SlideViewTransition;
+			import spark.transitions.ZoomViewTransition;
+
+			[Bindable]
+			private var sprints:ArrayCollection;
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				sprints=event.data;
+				busy.visible=false;
+
+				list.dataGroup.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, onPropertyChange);
+
+				expandAll();
+				
+				list.selectedIndex = 0;
+
+			}
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				if(sprints == null) controller.getSprints();
+
+				navigator.defaultPopTransition=new CrossFadeViewTransition();
+				navigator.defaultPushTransition=new SlideViewTransition();
+
+			}
+
+			protected function onChange(event:MouseEvent):void
+			{
+
+				/* var item:ProjectListItemRenderer=getItemRenderer(list, list.selectedItem) as ProjectListItemRenderer;
+				item.toggle(); */
+				
+				var item:Object = list.selectedItem;
+				
+				if (item is ProjetoVO)
+				{
+					
+					trace("ProjetoVO");
+					PineappleMobile.getInstance().navigateToView(ProjectDetailView, item);
+					
+				}
+				else if (item is SprintVO)
+				{
+					
+					trace("SprintVO");
+					PineappleMobile.getInstance().navigateToView(SprintDetailView, item);
+					
+				}
+				else if (item is AtividadeVO)
+				{
+					
+					trace("AtividadeVO");
+					PineappleMobile.getInstance().navigateToView(ResumoDetailView, item);
+					
+				} 
+
+			}
+
+			public function getItemRenderer(list:Tree, item:Object):ItemRenderer
+			{
+				var dataGroup:DataGroup=list.dataGroup;
+				var n:int=dataGroup.numElements;
+				var retorno:ItemRenderer=null;
+				for (var i:int=0; i < n; i++)
+				{
+					var renderer:ItemRenderer=dataGroup.getElementAt(i) as ItemRenderer;
+					if (renderer && renderer.data == item)
+						retorno=renderer;
+				}
+
+				return retorno;
+			}
+
+			protected function onBackPressed(event:FlexEvent):void
+			{
+
+				event.preventDefault();
+				trace("SprintsView.onBackPressed(event)");
+
+			}
+
+			protected function onVoltar(event:MouseEvent):void
+			{
+
+				navigator.popView();
+
+			}
+
+			protected function list_mouseUpHandler(event:MouseEvent):void
+			{
+
+
+				if (list.scroller.verticalScrollBar != null)
+				{
+
+					if (list.scroller.verticalScrollBar.value < -90)
+					{
+
+						loadingGroup.visible=false;
+						busy.visible=true;
+
+						list.dataGroup.removeEventListener(PropertyChangeEvent.PROPERTY_CHANGE, onPropertyChange);
+						controller=new ControladorProjetos();
+						controller.addEventListener(DataReturnEvent.DATA_RETURN, onDataReturn);
+						controller.getSprints(true);
+						sprints=new ArrayCollection([{nome: "Atualizando..."}]);
+
+					}
+
+				}
+
+			}
+
+			private function expandAll():void
+			{
+
+				var d:IList=list.dataProvider;
+				for (var i:int=0; i < d.length; i++)
+				{
+
+					list.expandItem(d.getItemAt(i));
+
+				}
+
+			}
+
+			protected function onPropertyChange(event:PropertyChangeEvent):void
+			{
+
+				if (event.source == event.target && event.property == "verticalScrollPosition")
+				{
+
+					var vScroll:Number=list.dataGroup.verticalScrollPosition;
+					if (vScroll < -20)
+					{
+						trace(vScroll);
+						if (!loadingGroup.visible)
+						{
+							loadingGroup.visible=true;
+							loadingGroup.includeInLayout=true;
+							fadeIn.play();
+						}
+						loadingGroup.y=vScroll * -1 - 60;
+
+						if (vScroll < -90)
+						{
+							trace(arrowImage.rotation);
+							if (arrowImage.rotation == 0)
+							{
+								arrowImage.rotation=180;
+							}
+							loadText.text="Solte para atualizar...";
+
+						}
+						else
+						{
+							if (arrowImage.rotation == 180)
+							{
+								arrowImage.rotation=0;
+							}
+							loadText.text="Puxe para atualizar";
+						}
+
+					}
+					else
+					{
+						loadingGroup.visible=false;
+						loadingGroup.includeInLayout=false;
+					}
+				}
+			}
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+
+		<controllers1:ControladorProjetos id="controller"
+										  data_return="onDataReturn(event)"/>
+		<s:Fade id='fadeIn'
+				target="{loadingGroup}"
+				duration="500"
+				alphaFrom="0"
+				alphaTo="1"/>
+
+	</fx:Declarations>
+
+	<s:navigationContent>
+
+	</s:navigationContent>
+
+	<s:actionContent>
+
+		<s:Button label="Logout"/>
+
+	</s:actionContent>
+
+	<s:Group width="100%"
+			 height="100%">
+
+		<s:VGroup width="100%"
+				  height="100%">
+			<s:HGroup horizontalAlign="center"
+					  verticalAlign="middle"
+					  width="100%"
+					  id="loadingGroup"
+					  visible="false"
+					  height="50"
+					  includeInLayout="false">
+				<s:Image id="arrowImage"
+						 smooth="true"
+						 width="32"
+						 height="32"
+						 source="{AssetManager.ArrowUp}"/>
+				<s:Label text="Pull down to refresh"
+						 id="loadText"/>
+			</s:HGroup>
+
+			<sparkTree:Tree useVirtualLayout="false"
+							id="list"
+							mouseUp="list_mouseUpHandler(event)"
+							dataDescriptor="{new ProjectTreeDataDescriptor()}"
+							itemRenderer="com.pineapple.mobile.ui.ProjectListItemRenderer"
+							width="100%"
+							height="100%"
+							labelField="nome"
+							dataProvider="{sprints}"
+							click="onChange(event)">
+				<sparkTree:layout>
+					<s:VerticalLayout gap="2"/>
+				</sparkTree:layout>
+			</sparkTree:Tree>
+
+		</s:VGroup>
+
+		<s:BusyIndicator id="busy"
+						 verticalCenter="1"
+						 horizontalCenter="1"/>
+
+	</s:Group>
+
+</s:View>

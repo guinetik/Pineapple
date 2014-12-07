@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<actionScriptProperties analytics="false" mainApplicationPath="com/pineapple/frontend/PineappleFrontend.mxml" projectUUID="66a2f792-4bbc-4ab7-a60d-68dfc30edea7" version="10">
+  <compiler additionalCompilerArguments="-locale en_US" autoRSLOrdering="true" copyDependentFiles="false" fteInMXComponents="false" generateAccessible="true" htmlExpressInstall="true" htmlGenerate="true" htmlHistoryManagement="false" htmlPlayerVersionCheck="false" includeNetmonSwc="false" outputFolderPath="bin-debug" removeUnusedRSL="true" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="false" useDebugRSLSwfs="true" verifyDigests="true" warn="true">
+    <compilerSourcePath/>
+    <libraryPath defaultLinkType="1">
+      <libraryPathEntry kind="4" path="">
+        <excludedEntries>
+          <libraryPathEntry kind="3" linkType="1" path="${PROJECT_FRAMEWORKS}/libs/flex.swc" useDefaultLinkType="false"/>
+          <libraryPathEntry kind="3" linkType="1" path="${PROJECT_FRAMEWORKS}/libs/core.swc" useDefaultLinkType="false"/>
+        </excludedEntries>
+      </libraryPathEntry>
+      <libraryPathEntry kind="1" linkType="1" path="libs"/>
+      <libraryPathEntry kind="3" linkType="1" path="/PineappleBusiness/bin/PineappleBusiness.swc" useDefaultLinkType="false"/>
+      <libraryPathEntry kind="3" linkType="1" path="libs/SparkTree4.5.swc" useDefaultLinkType="false"/>
+    </libraryPath>
+    <sourceAttachmentPath/>
+  </compiler>
+  <applications>
+    <application path="com/pineapple/frontend/PineappleFrontend.mxml"/>
+  </applications>
+  <modules>
+    <module application="src/com/pineapple/frontend/PineappleFrontend.mxml" destPath="com/pineapple/frontend/views/perspectives/aluno/HomeAluno.swf" optimize="true" sourcePath="src/com/pineapple/frontend/views/perspectives/aluno/HomeAluno.mxml"/>
+    <module application="src/com/pineapple/frontend/PineappleFrontend.mxml" destPath="com/pineapple/frontend/views/perspectives/professor/HomeProfessor.swf" optimize="true" sourcePath="src/com/pineapple/frontend/views/perspectives/professor/HomeProfessor.mxml"/>
+    <module application="src/com/pineapple/frontend/PineappleFrontend.mxml" destPath="com/pineapple/frontend/views/perspectives/admin/HomeAdmin.swf" optimize="true" sourcePath="src/com/pineapple/frontend/views/perspectives/admin/HomeAdmin.mxml"/>
+  </modules>
+  <buildCSSFiles/>
+  <flashCatalyst validateFlashCatalystCompatibility="false"/>
+</actionScriptProperties>
+
+

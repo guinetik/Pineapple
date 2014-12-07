@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 initialize="onInit(event)"
+						 close="onClose(event)"
+						 title="Editar Resumo"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 width="800"
+						 height="400"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*"
+						 xmlns:controllers="com.pineapple.business.controllers.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.ProjetoVO;
+			
+			import flashx.textLayout.conversion.ConversionType;
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+
+			private var _projeto:ProjetoVO;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				editor.textFlow=TextConverter.importToFlow(projeto.descricao, TextConverter.TEXT_FIELD_HTML_FORMAT);
+
+			}
+
+			[Bindable]
+			public function get projeto():ProjetoVO
+			{
+				return _projeto;
+			}
+
+			public function set projeto(value:ProjetoVO):void
+			{
+				_projeto=value;
+			}
+
+
+			protected function editarResumo(event:MouseEvent):void
+			{
+
+				this.projeto.descricao=TextConverter.export(editor.textFlow, TextConverter.TEXT_FIELD_HTML_FORMAT, ConversionType.STRING_TYPE).toString();
+				controller.editarProjeto(this.projeto);
+				CursorManager.setBusyCursor();
+
+			}
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				if (event.result == true)
+				{
+
+					Alert.show("Resumo editado com sucesso", "Sucesso");
+					CursorManager.removeBusyCursor();
+					this.dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+					PopUpManager.removePopUp(this);
+
+				}
+				else
+				{
+
+					Alert.show("Erro ao editar o resumo", "Erro!");
+
+				}
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorProjetos id="controller"
+										 data_return="onDataReturn(event)"/>
+	</fx:Declarations>
+
+	<ui:controlBarContent>
+		<ui:RichTextControlBar id="richTextEditor"
+							   editor="{editor}"/>
+	</ui:controlBarContent>
+
+	<ui:layout>
+		<s:VerticalLayout paddingLeft="5"
+						  paddingRight="5"
+						  paddingTop="5"
+						  paddingBottom="5"
+						  gap="5"/>
+	</ui:layout>
+
+	<s:TextArea id="editor"
+				focusEnabled="false"
+				width="100%"
+				height="100%"
+				selectionChange="richTextEditor.editor_selectionChangeHandler(event);"/>
+	<s:Button width="100%"
+			  height="30"
+			  label="Enviar"
+			  click="editarResumo(event)"/>
+
+</ui:ResizableTitleWindow>

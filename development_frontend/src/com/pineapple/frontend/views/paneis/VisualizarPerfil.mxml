@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 initialize="onInit(event)"
+						 close="onClose(event)"
+						 width="600"
+						 height="400"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*"
+						 title="Visualizar Perfil"
+						 xmlns:controllers="com.pineapple.business.controllers.*">
+
+	<ui:layout>
+		<s:VerticalLayout paddingBottom="5"
+						  paddingLeft="5"
+						  paddingTop="5"
+						  paddingRight="5"/>
+	</ui:layout>
+
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.EquipeVO;
+			import com.pineapple.business.model.UserType;
+			import com.pineapple.business.model.UserVO;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+
+			[Bindable]
+			public var perfil:UserVO;
+			[Bindable]
+			public var nome:String;
+
+			[Bindable]
+			private var equipes:ArrayCollection;
+			[Bindable]
+			private var expertises:ArrayCollection;
+			[Bindable]
+			private var userEquipes:ArrayCollection;
+			[Bindable]
+			private var projetos:ArrayCollection;
+			[Bindable]
+			private var collection:ArrayCollection;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				txtNome.setStyle("fontWeight", "bold");
+				txtNome.setStyle("fontSize", "14");
+
+				this.controlBarVisible=false;
+
+			}
+
+			public function init():void
+			{
+
+				CursorManager.setBusyCursor();
+				controller.getPerfilUsuario(nome);
+
+			}
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				this.perfil=event.result as UserVO;
+				txtResumo.textFlow=TextConverter.importToFlow(perfil.mensagem, TextConverter.TEXT_FIELD_HTML_FORMAT);
+				CursorManager.removeBusyCursor();
+
+				controllerExpertises.getExpertisesUsuario(perfil.login);
+				CursorManager.setBusyCursor();
+
+				getProjetosOuEquipes();
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			protected function onReturnExpertises(event:DataReturnEvent):void
+			{
+
+				this.expertises=event.data;
+				CursorManager.removeBusyCursor();
+
+			}
+
+			protected function onReturnEquipes(event:DataReturnEvent):void
+			{
+
+				this.equipes = event.data;
+				this.collection = this.equipes;
+				CursorManager.removeBusyCursor();
+
+				if (perfil.login != LoginRepository.getInstance().loggedUser.login || perfil.entidade == UserType.USER_ALUNO)
+				{
+
+					controllerLeader.getEquipesWhereUserIsLeader(null);
+					CursorManager.setBusyCursor();
+
+				}
+
+			}
+
+			protected function onReturnLeader(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				if (event.data.length > 0)
+				{
+
+					this.controlBarVisible=true;
+					this.userEquipes=event.data;
+
+					var idsParaRemover:Array=[];
+					var i:int;
+					var userEquipe:EquipeVO;
+
+					for (i=0; i < userEquipes.length; i++)
+					{
+
+						userEquipe=userEquipes.getItemAt(i) as EquipeVO;
+
+						for (var j:int=0; j < this.equipes.length; j++)
+						{
+
+							var equipe:EquipeVO=this.equipes.getItemAt(j) as EquipeVO;
+							if (userEquipe.nome == equipe.nome)
+								idsParaRemover.push(userEquipe.nome);
+
+						}
+
+
+					}
+
+					trace("idsParaRemover.length", idsParaRemover.length);
+
+					for (var k:int=0; k < userEquipes.length; k++)
+					{
+
+						userEquipe=userEquipes.getItemAt(k) as EquipeVO;
+
+						for (i=0; i < idsParaRemover.length; i++)
+						{
+
+							if (userEquipe.nome == idsParaRemover[i])
+								userEquipes.removeItemAt(k);
+
+						}
+
+
+					}
+					
+					if(userEquipes.length == 0)
+					{
+						
+						this.controlBarVisible = false;
+						
+					}
+					
+					comboEquipe.selectedIndex=0;
+
+				}
+				else
+					this.controlBarVisible=false;
+
+			}
+
+			protected function convidarParaEquipe(event:MouseEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+				var equipe:EquipeVO=this.comboEquipe.selectedItem as EquipeVO;
+				controllerOperation.convidarParaEquipe(equipe, perfil, LoginRepository.getInstance().loggedUser);
+
+			}
+
+			protected function onEquipeChange(event:IndexChangeEvent):void
+			{
+
+				var menuController:MenuController = new MenuController();
+				menuController.root = this.root;
+				
+				if (listaEquipe.selectedItem is EquipeVO)
+				{
+
+					menuController.visualizarEquipe(listaEquipe.selectedItem);
+
+				}
+				else
+				{
+
+					menuController.visualizarProjeto(listaEquipe.selectedItem);
+
+				}
+
+			}
+
+			protected function onOperationReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+
+				if (event.result)
+				{
+
+					Alert.show("Operação realizada com sucesso", "Sucesso");
+
+				}
+				else
+				{
+
+					Alert.show("Houve um erro ao processar a operação", "Erro");
+
+				}
+
+			}
+
+			private function getProjetosOuEquipes():void
+			{
+
+				if (this.perfil.entidade == UserType.USER_ALUNO)
+				{
+
+					controllerEquipe.getEquipesByAluno(this.perfil);
+					CursorManager.setBusyCursor();
+
+				}
+				else
+				{
+
+					controllerProjetos.getProjetosByProfessor(LoginRepository.getInstance().loggedUser.login);
+					CursorManager.setBusyCursor();
+					this.panelEquipes.title = "Projetos que orienta";
+
+				}
+
+			}
+
+			protected function onReturnProjetos(event:DataReturnEvent):void
+			{
+				
+				this.projetos = event.data;
+				this.collection = projetos;
+				CursorManager.removeBusyCursor();
+
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorUsuario id="controller"
+										data_return="onDataReturn(event)"/>
+
+		<controllers:ControladorExpertises id="controllerExpertises"
+										   data_return="onReturnExpertises(event)"/>
+
+		<controllers:ControladorEquipe id="controllerEquipe"
+									   data_return="onReturnEquipes(event)"/>
+
+		<controllers:ControladorEquipe id="controllerLeader"
+									   data_return="onReturnLeader(event)"/>
+
+		<controllers:ControladorEquipe id="controllerOperation"
+									   data_return="onOperationReturn(event)"/>
+
+		<controllers:ControladorProjetos id="controllerProjetos"
+										 data_return="onReturnProjetos(event)"/>
+
+	</fx:Declarations>
+
+	<ui:controlBarContent>
+		<s:HGroup width="100%"
+				  verticalAlign="middle">
+			<s:Label text="Deseja convidar esse usuário para a sua equipe?"
+					 paddingTop="1"/>
+			<s:DropDownList width="100%"
+							id="comboEquipe"
+							labelField="nome"
+							dataProvider="{this.userEquipes}"/>
+			<s:Button label="Convidar"
+					  click="convidarParaEquipe(event)"/>
+		</s:HGroup>
+	</ui:controlBarContent>
+
+	<s:VGroup width="100%"
+			  height="30%">
+
+		<s:Label id="txtNome"
+				 text="{perfil.nome}"/>
+
+		<s:HGroup width="100%"
+				  height="100%"
+				  verticalAlign="middle">
+			<s:Image width="48"
+					 height="48"
+					 id="icon"
+					 source="{perfil.imagem}"
+					 smooth="true"/>
+			<s:TextArea width="100%"
+						editable="false"
+						selectable="true"
+						id="txtResumo"
+						height="100%"/>
+		</s:HGroup>
+
+	</s:VGroup>
+
+	<s:HGroup width="100%"
+			  height="100%">
+		<s:Panel width="50%"
+				 height="100%"
+				 title="Expertises">
+			<s:List width="100%"
+					height="100%"
+					borderVisible="false"
+					labelField="nome"
+					rollOverColor="#FFFFFF"
+					selectionColor="#EEEEEE"
+					itemRenderer="com.pineapple.frontend.views.renderers.ExpertiseItemRenderer"
+					dataProvider="{this.expertises}"/>
+		</s:Panel>
+		<s:Panel width="50%"
+				 height="100%"
+				 id="panelEquipes"
+				 title="Equipes">
+			<s:List width="100%"
+					height="100%"
+					styleName=".lunaGreen"
+					id="listaEquipe"
+					borderVisible="false"
+					labelField="nome"
+					change="onEquipeChange(event)"
+					itemRenderer="com.pineapple.frontend.views.renderers.GenericItemRenderer"
+					dataProvider="{this.collection}"/>
+		</s:Panel>
+	</s:HGroup>
+
+
+</ui:ResizableTitleWindow>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ViewNavigatorApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+							xmlns:s="library://ns.adobe.com/flex/spark"
+							splashScreenScaleMode="zoom"
+							firstView="com.pineapple.mobile.views.LoginView"
+							initialize="onInit(event)" applicationDPI="320">
+
+	<fx:Script>
+		<![CDATA[
+			import com.guinetik.kinetic.external.ServerSide;
+			import com.pineapple.business.AssetManager;
+			
+			import mx.events.FlexEvent;
+			
+			import spark.transitions.CrossFadeViewTransition;
+			import spark.transitions.FlipViewTransition;
+			import spark.transitions.SlideViewTransition;
+			import spark.transitions.ZoomViewTransition;
+
+			[Embed(source="assets/LubalinforIBM-Demi.otf", unicodeRange="U+0020-007E,U+00C0-00C3,U+00C9-00CA,U+00CD,U+00D3-00D5,U+00E0-00E3,U+00E7,U+00E9-00EA,U+00ED,U+00F3-00F5,U+00FA,U+00C7", mimeType="application/x-font", fontName="Lubalin for IBM Demi", fontFamily="Lubalin for IBM", embedAsCFF="false")]
+			private var DefaultFont:Class;
+
+			[Embed(source="assets/LubalinforIBM-Demi.otf", unicodeRange="U+0020-007E,U+00C0-00C3,U+00C9-00CA,U+00CD,U+00D3-00D5,U+00E0-00E3,U+00E7,U+00E9-00EA,U+00ED,U+00F3-00F5,U+00FA,U+00C7", mimeType="application/x-font", fontName="Lubalin for IBM Demi CFF", fontFamily="Lubalin for IBM", embedAsCFF="true")]
+			private var DefaultFontAsCFF:Class;
+
+			private static var instance:PineappleMobile;
+
+			public static function getInstance():PineappleMobile
+			{
+
+				return instance;
+
+			}
+
+			protected function onInit(event:FlexEvent):void
+			{
+				
+				this.splashScreenImage					= AssetManager.Splash;
+
+				instance								= this;
+				
+				navigator.defaultPopTransition 			= new CrossFadeViewTransition();
+				navigator.defaultPushTransition			= new SlideViewTransition();
+				
+				ServerSide.setConnection("http://projects.guinetik.com/public/pineapple_backend/gateway.php");
+				
+			}
+
+			public function navigateToView(ViewClass:Class, item:Object = null):void
+			{
+
+				trace("Pineapple.navigateToView(ViewClass, item)");
+				this.navigator.pushView(ViewClass, item);
+
+			}
+
+			public function popView():void
+			{
+
+				this.navigator.popView();
+
+			}
+			
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/halo";
+		@namespace mx1 "library://ns.adobe.com/flex/mx";
+		
+		s|ActionBar
+		{
+			chromeColor:#9EAC4B;
+			titleAlign: center;
+		}
+		
+		s|TabbedViewNavigator #tabBar
+		{
+			
+			chromeColor:#9EAC4B;
+			fontFamily: "Lubalin for IBM Demi";
+			
+		}
+		
+		global
+		{
+			
+			alternatingItemColors: #DDEDAF, #E7F4C8;
+			rollOverColor:#CEE891;
+			selectionColor:#BADA5F
+			
+		}
+		
+		s|ActionBar #titleDisplay
+		{
+			color: #FFFFFF; /* default color is white */
+			fontSize: 40;
+			shadowColor:#E4BC4E;
+			fontFamily: "Lubalin for IBM Demi";
+		}
+		
+		s|Button
+		{
+			
+			chromeColor:#9EAC4B;
+			color:#FFFFFF;
+			fontFamily: "Lubalin for IBM Demi";
+			
+		}
+		
+		s|FormItem
+		{
+			
+			skinClass : ClassReference("com.pineapple.mobile.skins.FormItemSkin");
+			
+		}
+		
+		
+	</fx:Style>
+
+</s:ViewNavigatorApplication>

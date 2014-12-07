@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 title="Detalhes do Projeto"
+						 initialize="onInit(event)"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 close="onClose(event)"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 width="100%"
+						 height="100%"
+						 xmlns:controllers="com.pineapple.business.controllers.*"
+						 xmlns:visualscripts="com.blogspot.visualscripts.*"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.model.UserType;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			import com.pineapple.frontend.views.ui.UIEvent;
+			
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.utils.TextFlowUtil;
+
+			private var _projeto:ProjetoVO;
+			private var _comentarios:ArrayCollection;
+
+			private var menuController:MenuController;
+
+			public function init():void
+			{
+
+				getComentarios();
+
+				txtResumo.textFlow=TextConverter.importToFlow(projeto.descricao, TextConverter.TEXT_FIELD_HTML_FORMAT);
+
+
+				if (projeto.orientador == "-")
+				{
+
+					btComentarios.visible=false;
+					btComentarios.includeInLayout=false;
+					btAddComentario.visible=btAddComentario.includeInLayout=false;
+
+				}
+
+				if (LoginRepository.getInstance().loggedUser.login == projeto.orientador)
+				{
+
+					enableEditarResumo();
+					dataInicio.enabled=true;
+					dataFim.enabled=true;
+					txtStatus.text="Status: ";
+					this.comboStatus.visible=this.comboStatus.includeInLayout=true;
+					this.comboStatus.selectedItem=this.projeto.status;
+					btEditarResumo.visible=btEditarResumo.includeInLayout=false;
+					btCadastrarSprint.visible=btCadastrarSprint.includeInLayout=true;
+
+				}
+				else if (projeto.autor == LoginRepository.getInstance().loggedUser.nome)
+				{
+
+					enableEditarResumo();
+					txtStatus.text="Status: " + this.projeto.status;
+
+				}
+
+				txtStatus.setStyle("fontWeight", "bold");
+
+				var d:String=projeto.datacadastro.substr(0, 10);
+
+				dataCadastro.selectedDate=new Date(Date.parse(d.replace("-", "/").replace("-", "/")));
+				dataInicio.selectedDate=new Date(projeto.datainicio.split("/")[2], projeto.datainicio.split("/")[1], projeto.datainicio.split("/")[0]);
+				dataFim.selectedDate=new Date(projeto.datafim.split("/")[2], projeto.datafim.split("/")[1], projeto.datafim.split("/")[0]);
+
+			}
+
+			[Bindable]
+			public function get projeto():ProjetoVO
+			{
+				return _projeto;
+			}
+
+			public function set projeto(value:ProjetoVO):void
+			{
+				_projeto=value;
+			}
+
+			[Bindable]
+			public function get comentarios():ArrayCollection
+			{
+				return _comentarios;
+			}
+
+			public function set comentarios(value:ArrayCollection):void
+			{
+				_comentarios=value;
+			}
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				this.comentarios=event.data;
+
+			}
+
+
+			protected function adicionarComentario(event:MouseEvent):void
+			{
+
+				menuController.adicionarComentario(this.projeto);
+
+			}
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				btResumo.selected=true;
+				btResumo.enabled=false;
+
+				txtNome.setStyle("fontWeight", "bold");
+				txtNome.setStyle("fontSize", "18");
+				
+				menuController = new MenuController();
+				menuController.root = this.root;
+				menuController.addEventListener(UIEvent.REFRESH_UI, onRefreshUI);
+
+			}
+
+			protected function enableEditarResumo():void
+			{
+
+				btEditarResumo.visible=true;
+				btEditarResumo.includeInLayout=true;
+
+			}
+
+			protected function editarResumo(event:MouseEvent):void
+			{
+
+				var c:MenuController = new MenuController();
+				c.root = this.root;
+				var p:DisplayObjectContainer = c.editarResumo(this.projeto);
+				p.addEventListener(CloseEvent.CLOSE, onPanelClose);
+
+			}
+
+			protected function onPanelClose(event:CloseEvent):void
+			{
+
+				this.dispatchEvent(new UIEvent(UIEvent.REFRESH_UI));
+
+			}
+
+			protected function toggleResumo(event:MouseEvent):void
+			{
+
+				if (btResumo.selected)
+				{
+
+					stack.selectedIndex=0;
+					btComentarios.selected=false;
+					btComentarios.enabled=true;
+					btResumo.enabled=false;
+
+				}
+				else
+				{
+
+					btComentarios.enabled=true;
+
+				}
+
+			}
+
+			protected function toggleComentarios(event:MouseEvent):void
+			{
+
+				if (btComentarios.selected)
+				{
+
+					stack.selectedIndex=1;
+					btResumo.selected=false;
+					btResumo.enabled=true;
+					btComentarios.enabled=false;
+					getComentarios();
+
+				}
+				else
+				{
+
+					btComentarios.enabled=true;
+
+				}
+
+			}
+
+			public function hideCloseButton():void
+			{
+
+				this.closeButton.visible=false;
+				this.resizeHandle.visible=false;
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			protected function alterarDatas(event:MouseEvent):void
+			{
+
+				var dateInicio:String=dataInicio.selectedDate.date + "/" + (Number(dataInicio.selectedDate.month + 1)) + "/" + dataInicio.selectedDate.fullYear;
+				var dateFim:String=dataFim.selectedDate.date + "/" + (Number(dataFim.selectedDate.month + 1)) + "/" + dataFim.selectedDate.fullYear;
+
+				this.projeto.datainicio=dateInicio;
+				this.projeto.datafim=dateFim;
+
+				this.controllerProject.definirDatas(this.projeto);
+				CursorManager.setBusyCursor();
+
+			}
+
+			protected function onDataChanged(event:IndexChangeEvent):void
+			{
+
+				btAlterarDatas.visible=btAlterarDatas.includeInLayout=true;
+				btAlterarStatus.visible=btAlterarStatus.includeInLayout=false;
+
+			}
+
+			protected function alterarStatus(event:MouseEvent):void
+			{
+
+				this.projeto.status=comboStatus.selectedItem;
+				this.controllerProject.alterarStatus(this.projeto);
+				CursorManager.setBusyCursor();
+
+			}
+
+			protected function onStatusChange(event:IndexChangeEvent):void
+			{
+
+				btAlterarDatas.visible=btAlterarDatas.includeInLayout=false;
+				btAlterarStatus.visible=btAlterarStatus.includeInLayout=true;
+
+			}
+
+			protected function onOperationReturn(event:DataReturnEvent):void
+			{
+
+				if (event.result == true)
+				{
+
+					Alert.show("Operação Realizada com Sucesso", "Sucesso");
+					btAlterarDatas.visible=btAlterarDatas.includeInLayout=false;
+					btAlterarStatus.visible=btAlterarStatus.includeInLayout=false;
+
+				}
+				else
+				{
+
+					Alert.show("Erro ao executar a operação", "Erro");
+
+				}
+
+				CursorManager.removeBusyCursor();
+
+			}
+
+			protected function cadastrarSprint(event:MouseEvent):void
+			{
+
+				var c:MenuController = new MenuController();
+				c.root = this.root;
+				var p:DisplayObjectContainer = c.cadastrarSprint(this.projeto.id);
+				p.addEventListener(CloseEvent.CLOSE, onCloseSprints);
+				
+
+			}
+
+			protected function onCloseSprints(event:CloseEvent):void
+			{
+
+				this.dispatchEvent(new UIEvent(UIEvent.REFRESH_UI));
+
+			}
+
+			public function getProjetoById(id_projeto:int):void
+			{
+
+				CursorManager.setBusyCursor();
+				projetoController.getProjetosById(id_projeto);
+
+			}
+
+			protected function onProjectReturn(event:DataReturnEvent):void
+			{
+
+				this.projeto=event.result as ProjetoVO;
+				init();
+				CursorManager.removeBusyCursor();
+
+			}
+			
+			protected function onRefreshUI(event:Event):void
+			{
+				
+				getComentarios();
+				
+			}
+			
+			private function getComentarios():void
+			{
+				
+				CursorManager.setBusyCursor();
+				controller.getComentariosByProjeto(projeto);
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorComentarios id="controller"
+											data_return="onDataReturn(event)"/>
+		<controllers:ControladorProjetos id="controllerProject"
+										 data_return="onOperationReturn(event)"/>
+		<controllers:ControladorProjetos id="projetoController"
+										 data_return="onProjectReturn(event)"/>
+	</fx:Declarations>
+
+	<fx:Metadata>
+		[Event(name="refresh_ui", type="com.pineapple.frontend.views.ui.UIEvent")]
+	</fx:Metadata>
+
+	<ui:layout>
+		<s:VerticalLayout paddingLeft="5"
+						  paddingBottom="5"
+						  paddingTop="5"
+						  paddingRight="5"/>
+	</ui:layout>
+
+	<ui:controlBarContent>
+		<s:ToggleButton label="Resumo"
+						height="30"
+						click="toggleResumo(event)"
+						id="btResumo"/>
+		<s:Button label="Editar Resumo"
+				  id="btEditarResumo"
+				  visible="false"
+				  height="30"
+				  includeInLayout="false"
+				  click="editarResumo(event)"/>
+		<s:ToggleButton label="Comentários"
+						id="btComentarios"
+						height="30"
+						click="toggleComentarios(event)"/>
+		<s:Button label="Adicionar Comentário"
+				  id="btAddComentario"
+				  horizontalCenter="2"
+				  height="30"
+				  click="adicionarComentario(event)"/>
+		<s:Button label="Cadastrar Sprint"
+				  height="30"
+				  click="cadastrarSprint(event)"
+				  id="btCadastrarSprint"
+				  visible="false"
+				  includeInLayout="false"/>
+	</ui:controlBarContent>
+
+	<s:Label id="txtNome"
+			 text="{projeto.nome}"
+			 paddingLeft="5"
+			 paddingTop="10"
+			 paddingBottom="10"/>
+
+	<mx:ViewStack width="100%"
+				  height="100%"
+				  id="stack">
+
+		<s:NavigatorContent label="Resumo">
+
+			<s:layout>
+				<s:VerticalLayout paddingLeft="5"
+								  paddingBottom="5"
+								  paddingTop="5"
+								  paddingRight="5"/>
+			</s:layout>
+
+			<s:BorderContainer borderVisible="false"
+							   width="100%"
+							   height="35">
+				<s:layout>
+					<s:HorizontalLayout gap="5"
+										paddingLeft="5"
+										paddingRight="5"
+										verticalAlign="middle"/>
+				</s:layout>
+
+				<s:Label text="Status:"
+						 id="txtStatus"
+						 paddingTop="5"/>
+				<s:DropDownList id="comboStatus"
+								change="onStatusChange(event)"
+								dataProvider="{new ArrayCollection(['Inicio','Em Andamento','Finalizado'])}"
+								visible="false"
+								height="24"
+								width="100%"
+								includeInLayout="false"/>
+				<s:Button label="Alterar Status"
+						  height="24"
+						  id="btAlterarStatus"
+						  click="alterarStatus(event)"
+						  visible="false"
+						  includeInLayout="false"/>
+				<s:Label text="Cadastrado em:"
+						 paddingTop="5"/>
+				<visualscripts:SparkDateComponent enabled="false"
+												  height="24"
+												  width="95"
+												  skinClass="com.blogspot.visualscripts.SparkDateFieldSkin"
+												  id="dataCadastro"/>
+				<s:Label text="Início:"
+						 paddingTop="5"/>
+				<visualscripts:SparkDateComponent enabled="false"
+												  height="24"
+												  width="95"
+												  change="onDataChanged(event)"
+												  skinClass="com.blogspot.visualscripts.SparkDateFieldSkin"
+												  id="dataInicio"/>
+				<s:Label text="Prazo:"
+						 paddingTop="5"/>
+				<visualscripts:SparkDateComponent enabled="false"
+												  height="24"
+												  width="95"
+												  change="onDataChanged(event)"
+												  skinClass="com.blogspot.visualscripts.SparkDateFieldSkin"
+												  id="dataFim"/>
+
+				<s:Button label="Alterar Datas"
+						  visible="false"
+						  includeInLayout="false"
+						  id="btAlterarDatas"
+						  height="24"
+						  click="alterarDatas(event)"/>
+
+			</s:BorderContainer>
+
+			<s:TextArea id="txtResumo"
+						width="100%"
+						editable="false"
+						height="100%"/>
+
+		</s:NavigatorContent>
+
+		<s:NavigatorContent label="Comentários">
+
+			<s:layout>
+				<s:VerticalLayout paddingLeft="5"
+								  paddingBottom="5"
+								  paddingTop="5"
+								  paddingRight="5"/>
+			</s:layout>
+
+			<s:List id="list"
+					dataProvider="{comentarios}"
+					width="100%"
+					height="100%"
+					labelField="nome"
+					borderVisible="false"
+					useVirtualLayout="false"
+					itemRenderer="com.pineapple.frontend.views.renderers.ComentariosItemRenderer">
+				<s:layout>
+					<s:VerticalLayout gap="1"/>
+				</s:layout>
+			</s:List>
+
+		</s:NavigatorContent>
+
+	</mx:ViewStack>
+
+</ui:ResizableTitleWindow>

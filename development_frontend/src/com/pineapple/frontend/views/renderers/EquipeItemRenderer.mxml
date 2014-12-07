@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				width="100%"
+				initialize="onInit(event)"
+				autoDrawBackground="true">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.model.EquipeVO;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			import com.pineapple.frontend.views.paneis.VisualizarEquipe;
+			import com.pineapple.frontend.views.paneis.VisualizarPerfil;
+			
+			import mx.events.FlexEvent;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				txtLabel.setStyle("fontWeight", "bold");
+				txtLabel.setStyle("fontSize", "18");
+
+			}
+
+			protected function openProfile(event:MouseEvent):void
+			{
+
+				var c:MenuController = new MenuController();
+				c.root = this.root;
+				c.abrirPerfil(EquipeVO(data).criador);
+
+			}
+
+			protected function openEquipe(event:MouseEvent):void
+			{
+
+				var c:MenuController = new MenuController();
+				c.root = this.root;
+				c.visualizarEquipe(this.data as EquipeVO);				
+
+			}
+		]]>
+	</fx:Script>
+
+	<s:VGroup width="100%"
+			  height="100%"
+			  gap="5"
+			  verticalAlign="middle">
+
+		<s:BorderContainer width="100%"
+						   height="55"
+						   borderVisible="false"
+						   backgroundColor="#FFFFFF"
+						   backgroundAlpha="0.5">
+			<s:layout>
+				<s:HorizontalLayout verticalAlign="middle"
+									paddingLeft="5"
+									paddingRight="5"/>
+			</s:layout>
+
+			<s:Label text="{data.nome}"
+					 width="100%"
+					 id="txtLabel"
+					 paddingLeft="1"/>
+
+			<s:VGroup horizontalAlign="right"
+					  gap="1">
+				<s:HGroup>
+					<mx:LinkButton label="{'Criada por: ' + EquipeVO(data).criador}" textAlign="right"
+								   click="openProfile(event)"/>
+
+					<s:Image source="{EquipeVO(data).imagem_criador}"
+							 width="25"
+							 height="25"
+							 smooth="true"/>
+				</s:HGroup>
+				<s:HGroup>
+					<mx:LinkButton label="{'Lider: ' + EquipeVO(data).lider}" textAlign="right"
+								   click="openProfile(event)"/>
+
+					<s:Image source="{EquipeVO(data).imagem_lider}"
+							 width="25"
+							 height="25"
+							 smooth="true"/>
+				</s:HGroup>
+			</s:VGroup>
+
+		</s:BorderContainer>
+
+		<mx:Text width="100%"
+				 paddingLeft="5"
+				 paddingRight="5"
+				 htmlText="{data.descricao}"/>
+	</s:VGroup>
+
+</s:ItemRenderer>

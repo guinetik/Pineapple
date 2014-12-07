@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				initialize="onInit(event)"
+				width="100%"
+				autoDrawBackground="true"
+				dataChange="onDataChange(event)"
+				xmlns:components="flexInc.spark.components.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			import com.pineapple.frontend.views.paneis.VisualizarIdeia;
+			import com.pineapple.frontend.views.paneis.VisualizarPerfil;
+			
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.events.FlexEvent;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				btContinuarLendo.setStyle("fontWeight", "bold");
+				txtLabel.setStyle("fontWeight", "bold");
+				txtLabel.setStyle("fontSize", "18");
+
+			}
+
+			protected function openProfile(event:MouseEvent):void
+			{
+
+				var c:MenuController = new MenuController();
+				c.root = this.root;
+				c.abrirPerfil(data.autor);				
+
+			}
+
+			protected function openIdea(event:MouseEvent):void
+			{
+
+				var c:MenuController = new MenuController();
+				c.root = this.root;
+				c.visualizarIdeia(this.data as ProjetoVO);
+
+			}
+
+			protected function onDataChange(event:FlexEvent):void
+			{
+
+				txtResumo.textFlow=TextConverter.importToFlow(data.descricao.substr(0, 400), TextConverter.TEXT_FIELD_HTML_FORMAT);
+
+			}
+		]]>
+	</fx:Script>
+
+	<!--<s:BorderContainer width="100%" height="100%" borderVisible="false" backgroundColor="#EEEEEE">-->
+
+	<s:VGroup width="100%"
+			  height="100%"
+			  gap="5"
+			  verticalAlign="middle">
+		<s:BorderContainer width="100%"
+						   height="100%"
+						   borderVisible="false"
+						   backgroundColor="#FFFFFF"
+						   backgroundAlpha="0.5">
+			<s:layout>
+				<s:HorizontalLayout verticalAlign="middle"
+									paddingLeft="5"
+									paddingRight="5"/>
+			</s:layout>
+
+			<s:Label text="{data.nome}"
+					 width="100%"
+					 id="txtLabel" paddingTop="5" paddingBottom="5"/>
+
+			<s:HGroup
+					  verticalAlign="middle"
+					  horizontalAlign="right"
+					  gap="1">
+				<mx:LinkButton label="{'Enviado por: ' + data.autor}"
+							   click="openProfile(event)"/>
+				<s:Image source="{data.imagem}"
+						 width="25"
+						 height="25"
+						 smooth="true"/>
+			</s:HGroup>
+
+		</s:BorderContainer>
+
+		<s:TextArea id="txtResumo"
+					width="100%"
+					borderVisible="false"
+					contentBackgroundAlpha="0"
+					editable="false"
+					verticalScrollPolicy="off"
+					selectable="false"
+					height="30"/>
+		<mx:LinkButton label="Continuar Lendo"
+					   id="btContinuarLendo"
+					   click="openIdea(event)"
+					   paddingLeft="0"
+					   paddingTop="-5"/>
+	</s:VGroup>
+
+</s:ItemRenderer>

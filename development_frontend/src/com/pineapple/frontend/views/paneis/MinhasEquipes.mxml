@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   title="Gerenciar Equipes"
+			   initialize="onInit(event)"
+			   close="onClose(event)"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="900"
+			   height="500"
+			   skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+			   xmlns:controllers="com.pineapple.business.controllers.*" xmlns:paneis="com.pineapple.frontend.views.paneis.*" xmlns:ui="com.pineapple.frontend.views.ui.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.EquipeVO;
+			import com.pineapple.business.model.UserVO;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+
+			[Bindable]
+			private var equipes:ArrayCollection;
+			
+			[Bindable]
+			public var equipe:EquipeVO;
+
+			protected function onReturnEquipes(event:DataReturnEvent):void
+			{
+				
+				CursorManager.removeBusyCursor();
+
+				if(event.data.length > 0)
+				{
+					
+					this.equipes=event.data;
+					this.listaEquipes.selectedIndex=0;
+					this.equipe = this.equipes.getItemAt(0) as EquipeVO;
+					btConvidar.enabled = (this.equipe.lider == LoginRepository.getInstance().loggedUser.nome);
+					this.visualizarEquipe.equipe = this.equipe;
+					this.visualizarEquipe.onChange();
+					
+					if (this.equipes.length > 0)
+						panelMinhasEquipes.controlBarVisible=true;
+					
+				} else 
+				{
+					
+					Alert.show("Você não tem nenhuma equipe no momento. Deseja criar uma equipe agora?", "Atenção", Alert.YES|Alert.NO, this.parent as Sprite, onCriarEquipeClosed);
+					
+				}
+
+			}
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				panelMinhasEquipes.controlBarVisible=false;
+
+				CursorManager.setBusyCursor();
+				controllerEquipe.getEquipesByAluno(null);
+				
+				this.visualizarEquipe.hideCloseButton();
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			protected function onChange(event:IndexChangeEvent):void
+			{
+
+				this.equipe = listaEquipes.selectedItem;
+				this.visualizarEquipe.equipe = this.equipe;
+				this.visualizarEquipe.onChange();
+				
+				btConvidar.enabled = (this.equipe.lider == LoginRepository.getInstance().loggedUser.nome);				
+
+				
+			}
+
+			protected function convidarAlunos(event:MouseEvent):void
+			{
+
+				var menuController:MenuController = new MenuController();
+				menuController.root = this.root;
+				menuController.openConvidarParaEquipe(this.equipe.nome);
+
+			}
+
+			protected function sairDaEquipe(event:MouseEvent):void
+			{
+
+				if (this.equipe.lider == LoginRepository.getInstance().loggedUser.nome)
+				{
+
+					Alert.show("Você não pode sair da equipe por ser o seu líder. Antes de sair, promova outro usuário a líder", "Atenção");
+
+				}
+				else
+				{
+
+					controllerOperation.removeUsuarioFromEquipe(this.equipe, LoginRepository.getInstance().loggedUser.nome);
+
+				}
+
+			}
+			
+			private function onCriarEquipeClosed(e:CloseEvent):void
+			{
+				
+				if(e.detail == Alert.YES)
+				{
+					
+					var menuController:MenuController = new MenuController();
+					menuController.root = this.root;
+					menuController.openCriarEquipes();
+					
+				}
+				
+				PopUpManager.removePopUp(this);
+				
+				
+			}
+			
+			protected function onOperationReturn(event:DataReturnEvent):void
+			{
+				
+				trace(event.result);
+				
+				if (event.result)
+				{
+					
+					Alert.show("Operação realizada com sucesso", "Sucesso");
+					CursorManager.setBusyCursor();
+					controllerEquipe.getEquipesByAluno(LoginRepository.getInstance().loggedUser);
+					
+				}
+				else
+				{
+					
+					Alert.show("Houve um erro ao processar a operação", "Erro");
+					
+				}
+				
+				CursorManager.removeBusyCursor();
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorEquipe id="controllerEquipe"
+									   data_return="onReturnEquipes(event)"/>
+		
+		<controllers:ControladorEquipe id="controllerOperation"
+									   data_return="onOperationReturn(event)"/>
+
+	</fx:Declarations>
+
+	<ui:layout>
+		<s:HorizontalLayout paddingBottom="5"
+							paddingLeft="5"
+							paddingRight="5"
+							paddingTop="5"/>
+	</ui:layout>
+
+	<s:Panel title="Minhas Equipes"
+			 
+			 width="30%"
+			 height="100%"
+			 id="panelMinhasEquipes">
+
+		<s:controlBarContent>
+			<s:Button label="Convidar Alunos"
+					  id="btConvidar"
+					  height="30"
+					  click="convidarAlunos(event)"/>
+			<s:Button label="Sair da Equipe"
+					  height="30"
+					  click="sairDaEquipe(event)"/>
+		</s:controlBarContent>
+
+		<s:List width="100%"
+				height="100%"
+				id="listaEquipes"
+				borderVisible="false"
+				itemRenderer="com.pineapple.frontend.views.renderers.GenericItemRenderer"
+				change="onChange(event)"
+				labelField="nome"
+				dataProvider="{this.equipes}"/>
+	</s:Panel>
+
+	<paneis:VisualizarEquipe width="70%" height="100%" id="visualizarEquipe"  title="Gerenciar Equipe"/>
+	
+
+</ui:ResizableTitleWindow>

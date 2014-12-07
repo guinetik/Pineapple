@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+			   width="550"
+			   height="400"
+			   close="onClose(event)"
+			   title="Criar Equipe"
+			   xmlns:ui="com.pineapple.frontend.views.ui.*"
+			   xmlns:controllers="com.pineapple.business.controllers.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.EquipeVO;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.controllers.MenuController;
+			
+			import flashx.textLayout.conversion.ConversionType;
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+				
+				if(event.result == true)
+				{
+					
+					Alert.show("Equipe Criada. Deseja convidar amigos para a sua Equipe?", "Sucesso", Alert.YES|Alert.NO, null, onCloseAlert);
+					
+				} else 
+				{
+					
+					Alert.show("Erro ao adicionar a equipe", "Erro!");
+					
+				}
+
+			}
+			
+			protected function criarEquipe(event:MouseEvent):void
+			{
+				
+				var equipe:EquipeVO = new EquipeVO();
+				equipe.nome = txtNome.text;
+				equipe.descricao = TextConverter.export(editor.textFlow, TextConverter.TEXT_FIELD_HTML_FORMAT, ConversionType.STRING_TYPE).toString();
+				equipe.lider = LoginRepository.getInstance().loggedUser.nome;
+				
+				controller.salvarEquipe(equipe);
+				
+			}
+			
+			private function onCloseAlert(e:CloseEvent):void
+			{
+				
+				if(e.detail == Alert.YES)
+				{
+					
+					var menuController:MenuController = new MenuController();
+					menuController.root = this.root;
+					menuController.openConvidarParaEquipe();
+					
+				} else 
+				{
+					
+					PopUpManager.removePopUp(this);
+					
+				}
+				
+			}
+			
+			protected function onClose(event:CloseEvent):void
+			{
+				
+				PopUpManager.removePopUp(this);
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorEquipe id="controller"
+									   data_return="onDataReturn(event)"/>
+	</fx:Declarations>
+
+	<ui:layout>
+		<s:VerticalLayout paddingBottom="10"
+						  paddingLeft="10"
+						  paddingRight="10"
+						  paddingTop="10"/>
+	</ui:layout>
+
+	<s:Label text="Nome:"/>
+	<s:TextInput width="100%"
+				 id="txtNome"/>
+	<s:Panel width="100%"
+			 
+			 height="100%" title="Descrição">
+		<s:controlBarContent>
+			<ui:RichTextControlBar id="richTextEditor"
+								   editor="{editor}"/>
+		</s:controlBarContent>
+		
+		<s:TextArea id="editor" x="0" y="0" width="100%" height="100%" focusEnabled="false"
+					selectionChange="richTextEditor.editor_selectionChangeHandler(event);"/>
+		
+	</s:Panel>
+	
+	<s:Button width="100%"
+			  height="30"
+			  label="Criar Equipe"
+			  click="criarEquipe(event)"/>
+
+</ui:ResizableTitleWindow>

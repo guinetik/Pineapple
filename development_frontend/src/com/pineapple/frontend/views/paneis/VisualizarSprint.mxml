@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 title="Detalhes da Sprint"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 close="onClose(event)"
+						 initialize="onInit(event)"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 width="100%"
+						 height="100%"
+						 xmlns:visualscripts="com.blogspot.visualscripts.*"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*" xmlns:controllers="com.pineapple.business.controllers.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.SprintVO;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			import com.pineapple.frontend.views.ui.UIEvent;
+			
+			import flashx.textLayout.conversion.TextConverter;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+
+			[Bindable]
+			public var sprint:SprintVO;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				txtNome.setStyle("fontWeight", "bold");
+				txtNome.setStyle("fontSize", "18");
+				txtStatus.setStyle("fontWeight", "bold");
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				PopUpManager.removePopUp(this);
+
+			}
+
+			public function init():void
+			{
+
+				txtResumo.textFlow=TextConverter.importToFlow(sprint.descricao, TextConverter.TEXT_FIELD_HTML_FORMAT);
+
+				dataInicio.selectedDate=new Date(Date.parse(sprint.datainicio));
+				dataFim.selectedDate=new Date(Date.parse(sprint.datafim));
+				
+				controllerProfessor.isProfessorOrientador(LoginRepository.getInstance().loggedUser.login, this.sprint.idprojeto);
+				CursorManager.setBusyCursor();
+
+			}
+
+			public function hideCloseButton():void
+			{
+
+				this.closeButton.visible=false;
+				this.resizeHandle.visible=false;
+
+			}
+
+			protected function adicionarAtividade(event:MouseEvent):void
+			{
+
+				var c:MenuController = new MenuController();
+				c.root = this.root;
+				var p:DisplayObjectContainer = c.cadastrarAtividade(sprint.idprojeto, sprint.id);
+				p.addEventListener(CloseEvent.CLOSE, onPanelClose);
+
+			}
+
+			protected function onPanelClose(event:CloseEvent):void
+			{
+
+				this.dispatchEvent(new UIEvent(UIEvent.REFRESH_UI));
+
+			}
+
+			protected function editarSprint(event:MouseEvent):void
+			{
+				
+				var c:MenuController = new MenuController();
+				c.root = this.root;
+				var p:DisplayObjectContainer = c.editarSprint(this.sprint);
+				p.addEventListener(CloseEvent.CLOSE, onPanelClose);
+				
+
+			}
+
+			protected function excluirSprint(event:MouseEvent):void
+			{
+				
+				CursorManager.setBusyCursor();
+				controllerOperation.deleteSprint(this.sprint);
+
+			}
+			
+			protected function onResultProfessor(event:DataReturnEvent):void
+			{
+				
+				CursorManager.removeBusyCursor();
+				
+				if(event.result == true)
+				{
+					
+					btEditarSprint.visible = btExcluirSprint.visible = btEditarSprint.includeInLayout = btExcluirSprint.includeInLayout = true;
+					dataInicio.enabled=true;
+					dataFim.enabled=true;
+					txtStatus.text="Status: ";
+					this.comboStatus.visible=this.comboStatus.includeInLayout=true;
+					this.comboStatus.selectedItem=this.sprint.status;
+					
+				}
+				
+			}
+			
+			protected function onOperationReturn(event:DataReturnEvent):void
+			{
+				
+				CursorManager.removeBusyCursor();
+				
+				if(event.result == true)
+				{
+					
+					Alert.show("Operação Realizada com Sucesso", "Sucesso");
+					btAlterarDatas.visible=btAlterarDatas.includeInLayout=false;
+					btAlterarStatus.visible=btAlterarStatus.includeInLayout=false;
+					this.dispatchEvent(new UIEvent(UIEvent.REFRESH_UI));
+					
+				} else 
+				{
+					
+					Alert.show("Erro ao processar a operação", "Erro");
+					
+				}
+				
+			}
+			
+			protected function alterarDatas(event:MouseEvent):void
+			{
+				
+				var dateInicio:String=dataInicio.selectedDate.date + "/" + (Number(dataInicio.selectedDate.month + 1)) + "/" + dataInicio.selectedDate.fullYear;
+				var dateFim:String=dataFim.selectedDate.date + "/" + (Number(dataFim.selectedDate.month + 1)) + "/" + dataFim.selectedDate.fullYear;
+				
+				this.sprint.datainicio=dateInicio;
+				this.sprint.datafim=dateFim;
+				
+				this.controllerOperation.definirDatasSprint(this.sprint);
+				CursorManager.setBusyCursor();
+				
+			}
+			
+			protected function onDataChanged(event:IndexChangeEvent):void
+			{
+				
+				btAlterarDatas.visible=btAlterarDatas.includeInLayout=true;
+				btAlterarStatus.visible=btAlterarStatus.includeInLayout=false;
+				
+			}
+			
+			protected function alterarStatus(event:MouseEvent):void
+			{
+				
+				this.sprint.status=comboStatus.selectedItem;
+				this.controllerOperation.alterarStatusSprint(this.sprint);
+				CursorManager.setBusyCursor();
+				
+			}
+			
+			protected function onStatusChange(event:IndexChangeEvent):void
+			{
+				
+				btAlterarDatas.visible=btAlterarDatas.includeInLayout=false;
+				btAlterarStatus.visible=btAlterarStatus.includeInLayout=true;
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		
+		<controllers:ControladorProjetos id="controllerProfessor" data_return="onResultProfessor(event)"/>
+		<controllers:ControladorProjetos id="controllerOperation" data_return="onOperationReturn(event)"/>
+		
+	</fx:Declarations>
+
+	<fx:Metadata>
+		[Event(name="refresh_ui", type="com.pineapple.frontend.views.ui.UIEvent")]
+	</fx:Metadata>
+
+	<ui:controlBarContent>
+		<s:Button label="Adicionar Atividade"
+				  height="30"
+				  click="adicionarAtividade(event)"
+				  id="btAdicionarAtividade"/>
+		<s:Button label="Editar Sprint"
+				  height="30"
+				  id="btEditarSprint"
+				  visible="false"
+				  includeInLayout="false"
+				  click="editarSprint(event)"/>
+		<s:Button label="Excluir Sprint"
+				  height="30"
+				  id="btExcluirSprint"
+				  visible="false"
+				  includeInLayout="false"
+				  click="excluirSprint(event)"/>
+	</ui:controlBarContent>
+	
+	<ui:layout>
+		<s:VerticalLayout paddingLeft="5"
+						  paddingBottom="5"
+						  paddingTop="5"
+						  paddingRight="5"/>
+	</ui:layout>
+
+	<s:Label id="txtNome"
+			 text="{sprint.nome}"
+			 paddingLeft="5"
+			 paddingTop="10"
+			 paddingBottom="10"/>
+
+	<s:BorderContainer borderVisible="false"
+					   width="100%"
+					   height="35">
+		<s:layout>
+			<s:HorizontalLayout gap="5"
+								paddingLeft="5"
+								paddingRight="5"
+								verticalAlign="middle"/>
+		</s:layout>
+		
+		<s:Label text="Status:"
+				 id="txtStatus"
+				 paddingTop="5"/>
+		<s:DropDownList id="comboStatus"
+						change="onStatusChange(event)"
+						dataProvider="{new ArrayCollection(['Inicio','Em Andamento','Finalizado'])}"
+						visible="false"
+						height="30"
+						width="100%"
+						includeInLayout="false"/>
+		<s:Button label="Alterar Status"
+				  height="30"
+				  id="btAlterarStatus"
+				  click="alterarStatus(event)"
+				  visible="false"
+				  includeInLayout="false"/>
+		<s:Label text="Início:"
+				 paddingTop="5"/>
+		<visualscripts:SparkDateComponent enabled="false"
+										  height="24"
+										  width="95"
+										  change="onDataChanged(event)"
+										  skinClass="com.blogspot.visualscripts.SparkDateFieldSkin"
+										  id="dataInicio"/>
+		<s:Label text="Prazo:"
+				 paddingTop="5"/>
+		<visualscripts:SparkDateComponent enabled="false"
+										  height="24"
+										  width="95"
+										  change="onDataChanged(event)"
+										  skinClass="com.blogspot.visualscripts.SparkDateFieldSkin"
+										  id="dataFim"/>
+		
+		<s:Button label="Alterar Datas"
+				  visible="false"
+				  includeInLayout="false"
+				  id="btAlterarDatas"
+				  height="30"
+				  click="alterarDatas(event)"/>
+		
+	</s:BorderContainer>
+
+	<s:TextArea id="txtResumo"
+				width="100%"
+				editable="false"
+				height="100%"/>
+
+</ui:ResizableTitleWindow>

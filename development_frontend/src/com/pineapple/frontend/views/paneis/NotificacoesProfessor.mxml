@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 title="Minhas Notificações"
+		 initialize="onInit(event)"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="400"
+		 height="300"
+		 xmlns:controllers="com.pineapple.business.controllers.*"
+		 xmlns:ui="com.pineapple.frontend.views.ui.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.ConviteVO;
+			import com.pineapple.business.model.EquipeVO;
+			import com.pineapple.business.model.OrientacaoVO;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			import com.pineapple.frontend.views.ui.UIEvent;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.events.IndexChangedEvent;
+			import mx.managers.CursorManager;
+			
+			import spark.events.IndexChangeEvent;
+
+			private var menuController:MenuController;
+
+
+			[Bindable]
+			private var orientacoes:ArrayCollection;
+
+			[Bindable]
+			private var comentarios:ArrayCollection;
+
+			protected function onReturnOrientacoes(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				this.orientacoes=event.data;
+				
+				if(this.orientacoes.length == 0)
+				{
+					
+					//accordion.selectedIndex = 0;
+					this.controlBarVisible=false;
+					
+				} /* else
+				{
+					
+					if(accordion.selectedIndex == 0)
+					{
+						
+						accordion.selectedIndex = 1;
+						
+					}
+					
+					this.controlBarVisible=false;
+					
+				} */
+
+			}
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				getConvites();
+				
+				menuController = new MenuController();
+				menuController.root = this.root;
+				menuController.addEventListener(UIEvent.REFRESH_UI, onRefreshUI);
+
+			}
+
+			protected function onRefreshUI(event:Event):void
+			{
+				getConvites();
+
+			}
+
+			public function getConvites():void
+			{
+
+				CursorManager.setBusyCursor();
+				controllerOrientacoes.getOrientacoesByProfessor(LoginRepository.getInstance().loggedUser.id);
+
+				CursorManager.setBusyCursor();
+				controllerComentarios.getUltimosComentariosByUsuario(LoginRepository.getInstance().loggedUser);
+				
+				this.dispatchEvent(new UIEvent(UIEvent.REFRESH_UI));
+
+			}
+
+			protected function onGenerateList(event:Event):void
+			{
+
+				event.target.addEventListener(UIEvent.REFRESH_UI, onRefreshUI);
+
+			}
+
+			protected function onComentariosReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				this.comentarios=event.data;
+
+			}
+
+			protected function aceitarConvite(event:MouseEvent):void
+			{
+
+				if(listaConvites.selectedItem != null)
+				{
+					
+					var c:OrientacaoVO=this.listaConvites.selectedItem as OrientacaoVO;
+					
+					var p:ProjetoVO=new ProjetoVO();
+					p.id=c.id_projeto;
+					p.equipe=c.equipe;
+					p.orientador=c.professor;
+					var hoje:Date=new Date();
+					var hojeString:String=hoje.date.toString() + "/" + (hoje.month + 1).toString() + "/" + hoje.fullYear.toString();
+					p.datainicio=hojeString;
+					p.datafim=hojeString;
+					controllerOperation.orientarProjeto(p);
+					CursorManager.setBusyCursor();
+					
+				}
+
+			}
+
+			protected function recusarConvite(event:MouseEvent):void
+			{
+				if(listaConvites.selectedItem != null)
+				{
+					var c:OrientacaoVO=this.listaConvites.selectedItem as OrientacaoVO;
+					controllerOperation.recusarOrientacao(c.id_orientacao);
+					CursorManager.setBusyCursor();
+				}
+
+			}
+
+			protected function onAccordionChange(event:IndexChangedEvent):void
+			{
+
+				trace(accordion.selectedIndex);
+
+				if (accordion.selectedIndex == 0)
+				{
+
+					this.controlBarVisible=true;
+					this.invalidateDisplayList();
+
+				}
+				{
+
+					this.controlBarVisible=false;
+
+				}
+				
+				getConvites();
+
+			}
+
+			protected function onListChange(event:IndexChangeEvent):void
+			{
+
+				this.controlBarVisible=true;
+
+			}
+
+			protected function onOperationReturn(event:DataReturnEvent):void
+			{
+
+				if (event.result == true)
+				{
+
+					Alert.show("Operação Realizada com sucesso", "Sucesso");
+					getConvites();
+
+				}
+				else
+				{
+
+					Alert.show("Houve um erro ao realizar a operação", "Erro");
+
+				}
+
+				CursorManager.removeBusyCursor();
+
+			}
+			
+			protected function solicitarMudanca(event:MouseEvent):void
+			{
+				
+				var o:OrientacaoVO = listaConvites.selectedItem as OrientacaoVO;
+				menuController.solicitarMudanca(o);
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorProjetos id="controllerOrientacoes"
+										 data_return="onReturnOrientacoes(event)"/>
+
+		<controllers:ControladorComentarios id="controllerComentarios"
+											data_return="onComentariosReturn(event)"/>
+
+		<controllers:ControladorProjetos id="controllerOperation"
+										 data_return="onOperationReturn(event)"/>
+
+
+	</fx:Declarations>
+	
+	<fx:Metadata>
+		[Event(name="refresh_ui", type="com.pineapple.frontend.views.ui.UIEvent")]
+	</fx:Metadata>
+
+	<s:controlBarContent>
+		<s:Button label="Solicitar Mudanças no Projeto" click="solicitarMudanca(event)"/>
+		<s:Button label="Orientar Projeto"
+				  click="aceitarConvite(event)"/>
+		<s:Button label="Recusar Orientação"
+				  click="recusarConvite(event)"/>
+	</s:controlBarContent>
+
+	<mx:Accordion width="100%"
+				  paddingLeft="0.5"
+				  paddingRight="0.5"
+				  openDuration="250"
+				  headerHeight="30"
+				  height="100%"
+				  id="accordion"
+				  change="onAccordionChange(event)"
+				  borderVisible="false">
+
+		<s:NavigatorContent width="100%"
+							height="100%"
+							enabled="{this.orientacoes.length > 0}"
+							label="{'Solicitações de Orientação' + ' (' + this.orientacoes.length + ')'}">
+
+			<s:layout>
+				<s:VerticalLayout gap="5"/>
+			</s:layout>
+
+			<s:List width="100%"
+					height="100%"
+					borderVisible="false"
+					dataProvider="{orientacoes}"
+					labelField="nome"
+					id="listaConvites"
+					addedToStage="onGenerateList(event)"
+					change="onListChange(event)"
+					horizontalScrollPolicy="off"
+					itemRenderer="com.pineapple.frontend.views.renderers.OrientationItemRenderer"/>
+
+		</s:NavigatorContent>
+
+		<s:NavigatorContent width="100%"
+							height="100%"
+							label="Últimos comentários cadastrados">
+			<s:List id="list"
+					dataProvider="{comentarios}"
+					width="100%"
+					height="100%"
+					labelField="nome"
+					borderVisible="false"
+					useVirtualLayout="false"
+					addedToStage="onGenerateList(event)"
+					itemRenderer="com.pineapple.frontend.views.renderers.ComentariosItemRenderer">
+				<s:layout>
+					<s:VerticalLayout gap="1"/>
+				</s:layout>
+			</s:List>
+		</s:NavigatorContent>
+
+		<s:NavigatorContent width="100%"
+							height="100%"
+							label="Enviar Comentário Rápido">
+			<ui:EnviarComentarioRapido width="100%"
+									   height="100%"/>
+		</s:NavigatorContent>
+
+	</mx:Accordion>
+
+</s:Panel>

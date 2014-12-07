@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 initialize="onInit(event)"
+						 close="onClose(event)"
+						 title="Visualizar Ideias"
+						 skinClass="com.pineapple.frontend.views.skins.ResizableTitleWindowSkin"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 width="100%"
+						 height="100%"
+						 xmlns:controllers="com.pineapple.business.controllers.*"
+						 xmlns:ui="com.pineapple.frontend.views.ui.*">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.AssetManager;
+			import com.pineapple.business.events.DataReturnEvent;
+			import com.pineapple.business.model.ProjetoVO;
+			import com.pineapple.business.model.UserType;
+			import com.pineapple.business.repository.LoginRepository;
+			import com.pineapple.frontend.PineappleFrontend;
+			import com.pineapple.frontend.controllers.MenuController;
+			import com.pineapple.frontend.views.paneis.CadastrarIdeia;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+
+			[Bindable]
+			private var ideias:ArrayCollection;
+
+			[Bindable]
+			public var intent:String;
+
+			protected function onInit(event:FlexEvent):void
+			{
+
+				CursorManager.setBusyCursor();
+				
+//				getData();
+				
+				if (LoginRepository.getInstance().loggedUser.entidade == UserType.USER_ALUNO)
+				{
+
+					btSolicitarOrientacao.visible=btSolicitarOrientacao.includeInLayout=true;
+
+				} else 
+				{
+					
+					btSolicitarOrientacao.visible=btSolicitarOrientacao.includeInLayout=false;
+					
+				}
+
+			}
+			
+			public function getData():void
+			{
+				
+				switch (intent)
+				{
+					case "GET_MINHAS_IDEIAS":
+					{
+						controller.getMinhasIdeias();
+						break;
+					}
+						
+					case "GET_ALL_IDEIAS":
+					{
+						controller.getIdeias();
+						break;
+					}
+						
+					case "GET_ULTIMAS_IDEIAS":
+					{
+						controller.getUltimasIdeias();
+						break;
+					}
+				}
+				
+			}
+
+			public function hideCloseButton():void
+			{
+
+				this.closeButton.visible=false;
+				this.resizeHandle.visible=false;
+
+			}
+
+			protected function onDataReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+				this.ideias=event.data;
+
+				if (this.intent == "GET_MINHAS_IDEIAS")
+				{
+
+					if (this.ideias.length == 0)
+					{
+
+						Alert.show("Você ainda não enviou nenhuma ideia. Gostaria de submeter uma ideia agora?", "Atenção", Alert.YES | Alert.NO, this.parent as Sprite, onMinhasIdeiasAlertClose);
+
+					}
+
+				}
+
+
+			}
+
+			protected function openCadastrarIdeia(event:MouseEvent):void
+			{
+
+				var c:MenuController = new MenuController();
+				c.root = this.root;
+				c.cadastrarIdeia();
+
+			}
+
+			protected function onClose(event:CloseEvent):void
+			{
+
+				fechar();
+
+			}
+			
+			private function fechar():void
+			{
+				
+				PopUpManager.removePopUp(this);
+				
+			}
+
+			protected function filtrarDados(event:MouseEvent):void
+			{
+
+				this.ideias.filterFunction=filterFirst;
+				this.ideias.refresh();
+				this.btLimparFiltros.includeInLayout=true;
+				this.btLimparFiltros.visible=true;
+
+			}
+
+			private function filterFirst(item:Object):Boolean
+			{
+
+				var p:ProjetoVO=item as ProjetoVO;
+				if (p.nome.match(new RegExp(txtFiltros.text, 'i')) || p.autor.match(new RegExp(txtFiltros.text, 'i')) || p.descricao.match(new RegExp(txtFiltros.text, 'i')))
+					return true;
+				else
+					return false;
+
+			}
+
+			protected function limparFiltros(event:MouseEvent):void
+			{
+
+				this.btLimparFiltros.includeInLayout=false;
+				this.btLimparFiltros.visible=false;
+				this.ideias.filterFunction=null;
+				this.ideias.refresh();
+
+			}
+
+			protected function solicitarOrientacao(event:MouseEvent):void
+			{
+				if (list.selectedItem != null)
+				{
+
+					waitingForOrientation=true;
+					CursorManager.setBusyCursor();
+					controllerEquipe.getEquipesWhereUserIsLeader(LoginRepository.getInstance().loggedUser);
+
+				}
+				else
+				{
+
+					Alert.show("Para solicitar orientação a um professor, selecione uma ideia na lista", "Atenção");
+
+				}
+
+			}
+
+			private var waitingForOrientation:Boolean=false;
+
+			protected function onEquipeDataReturn(event:DataReturnEvent):void
+			{
+
+				CursorManager.removeBusyCursor();
+
+				if (waitingForOrientation)
+				{
+
+					waitingForOrientation=false;
+					if (event.data.length > 0)
+						abrirTelaOrientacao();
+					else
+						abrirAlertaEquipes();
+
+				}
+
+			}
+
+			private function abrirTelaOrientacao():void
+			{
+
+				var c:MenuController = new MenuController();
+				c.root = this.root;
+				c.solicitarOrientacao(ProjetoVO(list.selectedItem).id);
+
+			}
+
+			private function abrirAlertaEquipes():void
+			{
+
+				Alert.show("Para solicitar orientação a um professor é necessário ser lider de uma Equipe. Deseja criar uma equipe agora?", "Atenção", Alert.YES | Alert.NO, null, onAlertEquipesClose);
+
+			}
+
+			private function onAlertEquipesClose(e:CloseEvent):void
+			{
+
+				if (e.detail == Alert.YES)
+				{
+
+					var c:MenuController = new MenuController();
+					c.root = this.root;
+					c.criarEquipe();
+
+				}
+
+			}
+
+			private function onMinhasIdeiasAlertClose(e:CloseEvent):void
+			{
+
+				if (e.detail == Alert.YES)
+				{
+
+					var c:MenuController = new MenuController();
+					c.root = this.root;
+					c.cadastrarIdeia();
+					fechar();
+
+				}
+				else
+				{
+
+					fechar();
+
+				}
+
+			}
+
+			protected function editarIdeia(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+
+			}
+
+			protected function apagarIdeia(event:MouseEvent):void
+			{
+				
+				var p:ProjetoVO = this.list.selectedItem as ProjetoVO;
+				if(p != null)
+				{
+					
+					controllerOperation.deletarProjeto(p);
+					
+				}
+
+			}
+			
+			protected function onListChange(event:IndexChangeEvent):void
+			{
+				
+				var p:ProjetoVO = list.selectedItem as ProjetoVO;
+				if(p.autor == LoginRepository.getInstance().loggedUser.nome)
+				{
+					
+					btEditarIdeia.visible = btEditarIdeia.includeInLayout = true;
+					btApagarIdeia.visible = btApagarIdeia.includeInLayout = true;
+					
+				} else 
+				{
+					
+					btEditarIdeia.visible = btEditarIdeia.includeInLayout = false;
+					btApagarIdeia.visible = btApagarIdeia.includeInLayout = false;
+					
+				}
+				
+			}
+			
+			protected function onOperationReturn(event:DataReturnEvent):void
+			{
+				
+				if(event.result == true)
+				{
+					
+					Alert.show("Operação realizada com sucesso", "Sucesso");
+					getData();
+					
+				} else 
+				{
+					
+					Alert.show("Houve um erro ao processar a operação", "Erro");
+					
+				}
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<controllers:ControladorProjetos id="controller"
+										 data_return="onDataReturn(event)"/>
+
+		<controllers:ControladorEquipe id="controllerEquipe"
+									   data_return="onEquipeDataReturn(event)"/>
+		
+		<controllers:ControladorProjetos id="controllerOperation" data_return="onOperationReturn(event)"/>
+
+	</fx:Declarations>
+
+	<ui:controlBarContent>
+
+		<s:HGroup width="100%">
+			<s:HGroup width="100%"
+					  verticalAlign="middle">
+				<s:Label text="Filtrar Ideias"
+						 paddingTop="1"/>
+				<s:TextInput width="100%"
+							 id="txtFiltros"/>
+				<s:Button height="30"
+						  icon="{AssetManager.Search}"
+						  click="filtrarDados(event)"/>
+				<s:Button height="30"
+						  label="Limpar Filtros"
+						  includeInLayout="false"
+						  visible="false"
+						  id="btLimparFiltros"
+						  click="limparFiltros(event)"/>
+			</s:HGroup>
+			<!--<s:Button height="30"
+					  label="Cadastrar uma nova ideia"
+					  click="openCadastrarIdeia(event)"/>-->
+			<s:Button height="30"
+					  label="Solicitar Orientação"
+					  click="solicitarOrientacao(event)"
+					  id="btSolicitarOrientacao"/>
+			<s:Button height="30"
+					  label="Editar Ideia"
+					  id="btEditarIdeia"
+					  includeInLayout="false"
+					  visible="false"
+					  click="editarIdeia(event)"/>
+			<s:Button height="30"
+					  id="btApagarIdeia"
+					  label="Apagar Ideia"
+					  includeInLayout="false"
+					  visible="false"
+					  click="apagarIdeia(event)"/>
+		</s:HGroup>
+
+	</ui:controlBarContent>
+
+	<s:List width="100%"
+			height="100%"
+			itemRenderer="com.pineapple.frontend.views.renderers.IdeiaItemRenderer"
+			id="list"
+			labelField="nome"
+			dataProvider="{ideias}"
+			change="onListChange(event)"
+			horizontalScrollPolicy="off"
+			borderVisible="false">
+		<s:layout>
+			<s:VerticalLayout gap="2"/>
+		</s:layout>
+	</s:List>
+</ui:ResizableTitleWindow>

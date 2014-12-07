@@ -1,0 +1,367 @@
+ /*****************************************
+**
+**	FlexInc. 2012
+**	http://www.loziosecchi.it/flex_inc
+**	http://twitter.com/loziosecchi
+**
+*****************************************/
+
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+@namespace baseSet "flexIncExamples.baseSet.*";
+@namespace views "com.pineapple.frontend.views.*";
+
+s|Application
+{
+	color: #666666;
+	fontSize: 12;
+	focusColor: #c3d5e5;
+}
+
+s|Button
+{
+	skinClass: ClassReference("flexInc.luna.skins.ButtonSkin");
+	cornerRadius: 4;
+}
+
+s|ToggleButton
+{
+	skinClass: ClassReference("flexInc.luna.skins.ToggleButtonSkin");
+	cornerRadius: 4;
+}
+
+s|TextInput
+{
+	skinClass: ClassReference("flexInc.luna.skins.TextInputSkin");
+	borderColor: #c1c1c1;
+}
+
+s|TextArea
+{
+	skinClass: ClassReference("flexInc.luna.skins.TextAreaSkin");
+	borderColor: #c1c1c1;
+}
+
+s|RadioButton
+{
+	skinClass: ClassReference("flexInc.luna.skins.RadioButtonSkin");
+	symbolColor: #787878;
+}
+
+s|CheckBox
+{
+	skinClass: ClassReference("flexInc.luna.skins.CheckBoxSkin");
+	symbolColor: #787878;
+}
+
+s|HSlider
+{
+	skinClass: ClassReference("flexInc.luna.skins.HSliderSkin");
+}
+
+s|VSlider
+{
+	skinClass: ClassReference("flexInc.luna.skins.VSliderSkin");
+}
+
+s|TabBar
+{
+	skinClass: ClassReference("flexInc.luna.skins.TabBarSkin");
+}
+
+s|ButtonBar
+{
+	skinClass: ClassReference("flexInc.luna.skins.ButtonBarSkin");
+}
+
+s|Panel
+{
+	skinClass: ClassReference("flexInc.luna.skins.PanelSkin");
+	borderColor: #999999;
+}
+
+s|TitleWindow
+{
+	skinClass: ClassReference("flexInc.luna.skins.TitleWindowSkin");
+	borderColor: #999999;
+}
+
+s|Spinner
+{
+	skinClass: ClassReference("flexInc.luna.skins.SpinnerSkin");
+	symbolColor: #787878;
+}
+
+s|NumericStepper
+{
+	skinClass: ClassReference("flexInc.luna.skins.NumericStepperSkin");
+	symbolColor: #787878;
+	borderColor: #b2b2b2;
+}
+
+s|DropDownList
+{
+	skinClass: ClassReference("flexInc.luna.skins.DropDownListSkin");
+	symbolColor: #787878;
+	rollOverColor: #cdcdcd;
+	selectionColor: #dedede;
+}
+
+s|ComboBox
+{
+	skinClass: ClassReference("flexInc.luna.skins.ComboBoxSkin");
+	symbolColor: #787878;
+	rollOverColor: #cdcdcd;
+	selectionColor: #dedede;
+}
+
+/*s|HScrollBar
+{
+	skinClass: ClassReference("flexInc.luna.skins.HScrollBarSkin");
+	symbolColor: #787878;	
+}
+
+s|VScrollBar
+{
+	skinClass: ClassReference("flexInc.luna.skins.VScrollBarSkin");
+	symbolColor: #787878;	
+}*/
+
+global 
+{
+	
+	modalTransparencyBlur: 1.5;
+	modalTransparency: 0.75;
+	modalTransparencyColor: #FFFFFF;
+	modalTransparencyDuration: 500;
+	
+}
+
+s|List, s|ComboBox, s|DropDownList
+{
+	
+	alternatingItemColors: #ECECEC, #E0E0E0;
+	rollOverColor:#EEEEEE;
+	selectionColor:#CCCCCC;
+	
+}
+
+mx|MenuBar
+{
+	
+	textRollOverColor:#999999;
+	rollOverColor:#ECECEC;
+	itemRollOverColor:#FFFFFF;
+	selectionColor:#EEEEEE;
+	itemSelectionColor:#CCCCCC;
+	borderColor: #FFFFFF;
+	cornerRadius: 0;
+	itemSkin:ClassReference("mx.skins.halo.ActivatorSkin");
+	
+	
+}
+
+s|BorderContainer
+{
+	
+	backgroundColor:#E0E0E0;
+	
+}
+
+.lunaAzure
+{
+	chromeColor: #76C5C2;
+	color: #333333;
+	focusedTextSelectionColor: #8ECFCC;
+	focusColor: #8ECFCC;
+}
+
+.lunaAzure s|BorderContainer
+{
+	
+	backgroundColor:#E4F3F3;
+	
+}
+
+.lunaAzure s|RadioButton, .lunaAzure s|CheckBox, .lunaAzure s|HScrollBar, .lunaAzure s|VScrollBar, .lunaAzure s|Spinner, .lunaAzure s|NumericStepper, .lunaAzure s|ComboBox, .lunaAzure s|DropDownList
+{
+	symbolColor: #6299aa;
+}
+
+.lunaAzure s|List, .lunaAzure s|ComboBox, .lunaAzure s|DropDownList
+{
+	
+	alternatingItemColors: #E4F3F3, #C8E8E7;
+	rollOverColor:#A5D9D6;
+	selectionColor:#76C5C2;
+	
+}
+
+.lunaAzure mx|MenuBar
+{
+	
+	textRollOverColor:#FFFFFF;
+	rollOverColor:#A5D9D6;
+	itemRollOverColor:#76C5C2;
+	selectionColor:#FFFFFF;
+	itemSelectionColor:#76C5C2;
+	borderColor: #FFFFFF;
+	cornerRadius: 0;
+	itemSkin:ClassReference("mx.skins.halo.ActivatorSkin");
+	
+	
+}
+
+.lunaRose
+{
+	chromeColor: #F7BEB9;
+	color: #333333;
+	focusedTextSelectionColor: #F7BEB9;
+	focusColor: #E67272;
+}
+
+.lunaRose s|RadioButton, .lunaRose s|CheckBox, .lunaRose s|HScrollBar, .lunaRose s|VScrollBar, .lunaRose s|Spinner, .lunaRose s|NumericStepper, .lunaRose s|ComboBox, .lunaRose s|DropDownList
+{
+	symbolColor: #555555;
+}
+
+.lunaRose s|List, .lunaRose s|ComboBox, .lunaRose s|DropDownList
+{
+	
+	alternatingItemColors: #F7D4D4, #F5C7C7;
+	rollOverColor:#F7BEB9;
+	selectionColor:#ED9C9C;
+	
+}
+
+.lunaRose s|BorderContainer
+{
+	
+	backgroundColor:#F7D4D4;
+	
+}
+
+.lunaRose mx|MenuBar
+{
+	
+	textRollOverColor:#FFFFFF;
+	rollOverColor:#ED9C9C;
+	itemRollOverColor:#FFFFFF;
+	selectionColor:#ED9C9C;
+	itemSelectionColor:#FFFFFF;
+	borderColor: #FFFFFF;
+	cornerRadius: 0;
+	itemSkin:ClassReference("mx.skins.halo.ActivatorSkin");
+	
+	
+}
+
+.lunaGreen
+{
+	chromeColor: #BADA5F;
+	focusedTextSelectionColor: #CEE891;
+	color: #333333;
+	focusColor: #CEE891;
+}
+
+.lunaGreen s|RadioButton, .lunaGreen s|CheckBox, .lunaGreen s|HScrollBar, .lunaGreen s|VScrollBar, .lunaGreen s|Spinner, .lunaGreen s|NumericStepper
+{
+	symbolColor: #555555;
+}
+
+.lunaGreen s|BorderContainer
+{
+	
+	backgroundColor:#E7F4C8;
+	
+}
+
+.lunaGreen s|List, .lunaGreen s|ComboBox, .lunaGreen s|DropDownList
+{
+	
+	alternatingItemColors: #DDEDAF, #E7F4C8;
+	rollOverColor:#CEE891;
+	selectionColor:#BADA5F;
+	
+}
+
+.lunaGreen mx|MenuBar
+{
+	
+	textRollOverColor:#729347;
+	rollOverColor:#D1F06E;
+	itemRollOverColor:#FFFFFF;
+	selectionColor:#9AC75F;
+	itemSelectionColor:#FFFFFF;
+	borderColor: #FFFFFF;
+	cornerRadius: 0;
+	itemSkin:ClassReference("mx.skins.halo.ActivatorSkin");
+	
+	
+}
+
+.lunaOrange
+{
+	chromeColor: #EFB34D;
+	color: #333333;
+	focusedTextSelectionColor: #EDA753;
+	focusColor: #EDA753;
+}
+
+.lunaOrange mx|MenuBar
+{
+	
+	textRollOverColor:#FFFFFF;
+	rollOverColor:#EDA753;
+	itemRollOverColor:#FFFFFF;
+	selectionColor:#E88363;
+	itemSelectionColor:#FFFFFF;
+	borderColor: #FFFFFF;
+	cornerRadius: 0;
+	itemSkin:ClassReference("mx.skins.halo.ActivatorSkin");
+	
+	
+}
+
+.lunaOrange s|RadioButton, .lunaOrange s|CheckBox, .lunaOrange s|HScrollBar, .lunaOrange s|VScrollBar, .lunaOrange s|Spinner, .lunaOrange s|NumericStepper, .lunaOrange s|ComboBox, .lunaOrange s|DropDownList
+{
+	symbolColor: #E88363;
+}
+
+.lunaOrange s|List, .lunaOrange s|ComboBox, .lunaOrange s|DropDownList
+{
+	
+	alternatingItemColors: #F7D9A6, #E9BF87;
+	rollOverColor:#F4CA98;
+	selectionColor:#EFB34D;
+	
+}
+
+.lunaOrange s|BorderContainer
+{
+	
+	backgroundColor:#F7D9A6;
+	
+}
+
+s|FormItem
+{
+	
+	skinClass : ClassReference("com.pineapple.frontend.views.skins.FormItemSkin");
+	
+}
+
+s|HScrollBar
+{
+	skinClass: ClassReference("com.pineapple.frontend.views.skins.HScrollBarSkin");
+	paddingTop:1;
+	chromeColor:#E0E0E0;
+}
+
+s|VScrollBar
+{
+	skinClass: ClassReference("com.pineapple.frontend.views.skins.VScrollBarSkin");
+	paddingLeft:1;
+	chromeColor:#E0E0E0;
+}
+

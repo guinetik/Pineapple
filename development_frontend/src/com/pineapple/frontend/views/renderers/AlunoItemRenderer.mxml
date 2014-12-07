@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				dataChange="onDataChange(event)"
+				initialize="onInit(event)"
+				height="30"
+				autoDrawBackground="true">
+	<fx:Script>
+		<![CDATA[
+			import com.pineapple.business.model.UserVO;
+			
+			import mx.events.FlexEvent;
+			
+			protected function onInit(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			protected function onDataChange(event:FlexEvent):void
+			{
+				
+				var u:UserVO = this.data as UserVO;
+				
+				if(u.extras.hasOwnProperty("disable"))
+				{
+					
+					this.enabled = false;
+					
+				}
+				
+			}
+			
+		]]>
+	</fx:Script>
+
+	<s:Image width="20"
+			 height="20"
+			 top="5"
+			 left="5"
+			 source="{data.imagem}"
+			 smooth="true"/>
+
+	<s:Label text="{data.nome}"
+			 verticalAlign="middle"
+			 paddingTop="3"
+			 paddingLeft="30"
+			 width="100%"
+			 height="100%"/>
+
+</s:ItemRenderer>

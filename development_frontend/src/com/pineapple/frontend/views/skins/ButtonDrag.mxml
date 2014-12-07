@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:d="http://ns.adobe.com/fxg/2008/dt"
+		 mouseOut="onOut()" 
+		 mouseOver="onOver()" 
+		 mouseDown="onDown()">
+	<fx:Script>
+		<![CDATA[			
+			import mx.managers.CursorManager;
+			private var _direction:int = 0;
+			public static var Both:int = 0;
+			public static var Vertical:int = 1;
+			public static var Horizontal:int = 2;
+			
+			public function set EnableDirection(i:int):void
+			{
+				_direction = i;
+				
+				if (_direction == Both)
+				{
+					this.currentState = "CrossNormal";
+				}
+				else if (_direction == Vertical)
+				{
+					this.currentState = "VerticalNormal";
+				}
+				else
+				{
+					this.currentState = "HorizontalNormal";
+				}				
+			}
+			
+			private var _isDragging:Boolean = false;
+			private function onOver():void
+			{
+				_isOut = false;
+				
+				if (_direction == Both)
+				{
+					this.currentState = "CrossOver";
+				}
+				else if (_direction == Vertical)
+				{
+					this.currentState = "VerticalOver";
+				}
+				else
+				{
+					this.currentState = "HorizontalOver";
+				}
+				
+				if (_mycurNormalId == -1 && !_isDragging)
+				{
+					_mycurNormalId = CursorManager.setCursor(cur_hand_normal); 
+				}
+			}
+			
+			private function onDown():void
+			{
+				_isDragging = true;
+				
+				this.stage.addEventListener(MouseEvent.MOUSE_UP, stageMouseUpHandler);
+				
+				if (_direction == Both)
+				{
+					this.currentState = "CrossDown";
+				}
+				else if (_direction == Vertical)
+				{
+					this.currentState = "VerticalDown";
+				}
+				else
+				{
+					this.currentState = "HorizontalDown";
+				}
+				
+				if (_mycurNormalId != -1)
+				{
+					CursorManager.removeCursor(_mycurNormalId);
+					_mycurNormalId = -1;
+				}
+				_mycurDragId = CursorManager.setCursor(cur_hand_drag); 
+			}
+			
+			private function onUp():void
+			{
+				_isDragging = false;
+				
+				if (_direction == Both)
+				{
+					this.currentState = "CrossNormal";
+				}
+				else if (_direction == Vertical)
+				{
+					this.currentState = "VerticalNormal";
+				}
+				else
+				{
+					this.currentState = "HorizontalNormal";
+				}
+				
+				if (_mycurDragId != -1)
+				{
+					CursorManager.removeCursor(_mycurDragId);
+					_mycurDragId = -1;
+				}
+				
+				if (_isOut)
+				{
+					if (_mycurNormalId != -1)
+					{
+						CursorManager.removeCursor(_mycurNormalId);
+						_mycurNormalId = -1;
+					}
+				}
+				else
+				{
+					_mycurNormalId = CursorManager.setCursor(cur_hand_normal); 
+				}
+			}
+			
+			private var _isOut:Boolean = false;
+			private function onOut():void
+			{
+				_isOut = true;
+				if (!_isDragging)
+				{
+					if (_direction == Both)
+					{
+						this.currentState = "CrossNormal";
+					}
+					else if (_direction == Vertical)
+					{
+						this.currentState = "VerticalNormal";
+					}
+					else
+					{
+						this.currentState = "HorizontalNormal";
+					}
+					
+					if (_mycurNormalId != -1)
+					{
+						CursorManager.removeCursor(_mycurNormalId);
+						_mycurNormalId = -1;
+					}
+				}
+			}
+			
+			private function stageMouseUpHandler(event:MouseEvent):void
+			{
+				this.stage.removeEventListener(MouseEvent.MOUSE_UP, stageMouseUpHandler);
+				
+				onUp();
+			}						
+			
+			[Embed(source="assets/cur_hand_normal.png")]
+			public static const cur_hand_normal:Class;
+			
+			[Embed(source="assets/cur_hand_drag.png")]
+			public static const cur_hand_drag:Class;
+			
+			private var _mycurNormalId:int = -1;
+			private var _mycurDragId:int = -1;
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="CrossNormal"/>
+		<s:State name="CrossOver"/>
+		<s:State name="CrossDown"/>
+		<s:State name="VerticalNormal"/>
+		<s:State name="VerticalOver"/>
+		<s:State name="VerticalDown"/>
+		<s:State name="HorizontalNormal"/>
+		<s:State name="HorizontalOver"/>
+		<s:State name="HorizontalDown"/>
+	</s:states>
+	<fx:DesignLayer>
+		<s:BitmapImage includeIn="CrossNormal,CrossOver,CrossDown,VerticalNormal,HorizontalNormal" x="0" y="0"
+					   alpha="0.8" smooth="true"
+					   source="@Embed('/assets/bg2.png')"
+					   visible.CrossOver="false"
+					   visible.CrossDown="false">
+			<s:mask>
+				<s:Group x="0" y="0">
+					<s:Path winding="evenOdd" data="M 24.45 0 C 38 0 48.95 10.95 48.95 24.45 C 48.95 38 38 48.95 24.45 48.95 C 10.95 48.95 0 38 0 24.45 C 0 10.95 10.95 0 24.45 0">
+						<s:fill>
+							<s:SolidColor color="#ff0000"/>
+						</s:fill>
+					</s:Path>
+				</s:Group>
+			</s:mask>
+		</s:BitmapImage>
+		<s:BitmapImage includeIn="CrossNormal,CrossOver,CrossDown,VerticalOver,HorizontalOver" x="0" y="0"
+					   smooth="true" source="@Embed('/assets/bg-hover1.png')"
+					   visible.CrossNormal="false"
+					   visible.CrossDown="false">
+			<s:mask>
+				<s:Group x="0" y="0">
+					<s:Path winding="evenOdd" data="M 24.45 0 C 38 0 48.95 10.95 48.95 24.45 C 48.95 38 38 48.95 24.45 48.95 C 10.95 48.95 0 38 0 24.45 C 0 10.95 10.95 0 24.45 0">
+						<s:fill>
+							<s:SolidColor color="#ff0000"/>
+						</s:fill>
+					</s:Path>
+				</s:Group>
+			</s:mask>
+		</s:BitmapImage>
+		<s:BitmapImage includeIn="CrossNormal,CrossOver,CrossDown,VerticalDown,HorizontalNormal,HorizontalDown"
+					   x="0" y="0" smooth="true"
+					   source="@Embed('/assets/bg-down1.png')"
+					   visible.CrossNormal="false"
+					   visible.CrossOver="false"
+					   visible.HorizontalNormal="false">
+			<s:mask>
+				<s:Group x="0" y="0">
+					<s:Path winding="evenOdd" data="M 24.45 0 C 38 0 48.95 10.95 48.95 24.45 C 48.95 38 38 48.95 24.45 48.95 C 10.95 48.95 0 38 0 24.45 C 0 10.95 10.95 0 24.45 0">
+						<s:fill>
+							<s:SolidColor color="#ff0000"/>
+						</s:fill>
+					</s:Path>
+				</s:Group>
+			</s:mask>
+		</s:BitmapImage>
+		<s:BitmapImage includeIn="CrossNormal,CrossOver,CrossDown,HorizontalNormal,HorizontalOver,HorizontalDown" x="24" y="18"
+					   smooth="true" source="@Embed('/assets/arrow-right.png')">
+			<s:mask>
+				<s:Group x="0" y="0">
+					<s:Path winding="evenOdd" data="M 0.2 10.55 L 10.45 10.55 L 10.45 14.15 L 19.7 7.2 L 10.45 0.2 L 10.45 3.8 L 0.2 3.8 L 0.2 10.55">
+						<s:fill>
+							<s:SolidColor color="#ff0000"/>
+						</s:fill>
+					</s:Path>
+				</s:Group>
+			</s:mask>
+		</s:BitmapImage>
+		<s:BitmapImage includeIn="CrossNormal,CrossOver,CrossDown,VerticalNormal,HorizontalNormal,HorizontalOver,HorizontalDown" x="5"
+					   y="18" smooth="true"
+					   source="@Embed('/assets/arrow-left.png')"
+					   visible.VerticalNormal="false">
+			<s:mask>
+				<s:Group x="0" y="0">
+					<s:Path winding="evenOdd" data="M 20.25 3.85 L 10.05 3.85 L 10.05 0.2 L 0.8 7.2 L 10.05 14.2 L 10.05 10.55 L 20.25 10.55 L 20.25 3.85">
+						<s:fill>
+							<s:SolidColor color="#ff0000"/>
+						</s:fill>
+					</s:Path>
+				</s:Group>
+			</s:mask>
+		</s:BitmapImage>
+		<s:BitmapImage includeIn="CrossNormal,CrossOver,CrossDown,VerticalNormal,VerticalOver,VerticalDown"
+					   x="17" y="6" smooth="true"
+					   source="@Embed('/assets/arrow-up.png')">
+			<s:mask>
+				<s:Group x="0" y="0">
+					<s:Path winding="evenOdd" data="M 11.1 19.7 L 11.1 9.5 L 14.7 9.5 L 7.75 0.25 L 0.75 9.5 L 4.35 9.5 L 4.35 19.7 L 11.1 19.7">
+						<s:fill>
+							<s:SolidColor color="#ff0000"/>
+						</s:fill>
+					</s:Path>
+				</s:Group>
+			</s:mask>
+		</s:BitmapImage>
+		<s:BitmapImage includeIn="CrossNormal,CrossOver,CrossDown,VerticalNormal,VerticalOver,VerticalDown"
+					   x="17" y="24" smooth="true"
+					   source="@Embed('/assets/arrow-down.png')">
+			<s:mask>
+				<s:Group x="0" y="0">
+					<s:Path winding="evenOdd" data="M 4.4 0.65 L 4.4 10.9 L 0.75 10.9 L 7.75 20.15 L 14.75 10.9 L 11.1 10.9 L 11.1 0.65 L 4.4 0.65">
+						<s:fill>
+							<s:SolidColor color="#ff0000"/>
+						</s:fill>
+					</s:Path>
+				</s:Group>
+			</s:mask>
+		</s:BitmapImage>
+	</fx:DesignLayer>
+</s:Group>
